@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Employee Attendance Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Arial, sans-serif;
+    background: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+
+  /* Always full width — no max-width cap on any screen */
+  .app {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    background: #fff;
+    border-radius: 0;
+    border: none;
+    position: relative;
+  }
+
+  /* Tablet 600px+ — bigger fonts, bigger spacing */
+  @media (min-width: 600px) {
+    body { font-size: 16px; }
+    .topbar { padding: 20px 32px; }
+    .topbar h1 { font-size: 22px; }
+    .topbar .back-btn { width: 38px; height: 38px; font-size: 22px; }
+    .cal-nav { padding: 20px 32px; }
+    .cal-nav span { font-size: 20px; }
+    .cal-nav button { width: 44px; height: 44px; font-size: 24px; }
+    .cal-grid { padding: 0 28px 20px; }
+    .day-label { font-size: 15px; padding: 8px 0; }
+    .cal-day { padding: 14px 4px; font-size: 17px; }
+    .cal-day.has-data::after { width: 7px; height: 7px; }
+    .legend { padding: 0 32px 16px; gap: 24px; }
+    .legend-item { font-size: 14px; }
+    .dot { width: 10px; height: 10px; }
+    .stats-section { margin: 0 28px 24px; }
+    .stats-header h3 { font-size: 14px; }
+    .stats-bar { padding: 16px; }
+    .emp-stat { padding: 10px 0; }
+    .emp-name-s { font-size: 17px; }
+    .emp-meta { font-size: 14px; }
+    .emp-earning { font-size: 17px; }
+    .manage-btn { font-size: 14px; padding: 9px 16px; }
+    .sync-bar { padding: 11px 24px; font-size: 14px; }
+    .sync-dot { width: 10px; height: 10px; }
+    .log-header { padding: 18px 32px; }
+    .log-date { font-size: 15px; }
+    .log-title { font-size: 20px; }
+    .emp-row { padding: 18px 32px; }
+    .avatar { width: 48px; height: 48px; font-size: 16px; }
+    .emp-label { font-size: 19px; }
+    .leave-toggle-label { font-size: 15px; }
+    .toggle-switch { width: 54px; height: 30px; }
+    .toggle-slider:before { width: 22px; height: 22px; }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(24px); }
+    .hours-input-wrap { margin-top: 10px; gap: 16px; }
+    .hours-input-wrap label { font-size: 16px; }
+    .hours-input-wrap input { width: 130px; font-size: 22px; padding: 12px 14px; }
+    .earning-badge { font-size: 16px; }
+    .save-btn { margin: 20px 32px; width: calc(100% - 64px); font-size: 18px; padding: 16px; border-radius: 12px; }
+    .saved-toast { margin: 0 32px 18px; font-size: 15px; padding: 12px; }
+    .emp-card { margin: 14px 28px; }
+    .emp-card-header { padding: 16px 18px; }
+    .emp-card-avatar { width: 48px; height: 48px; font-size: 15px; }
+    .emp-card-name { font-size: 18px; }
+    .edit-btn { width: 36px; height: 36px; font-size: 18px; }
+    .delete-btn { width: 36px; height: 36px; font-size: 18px; }
+    .emp-card-body { padding: 14px 18px; }
+    .rate-info { font-size: 14px; }
+    .rate-value { font-size: 18px; }
+    .edit-form input { font-size: 16px; padding: 10px 12px; }
+    .edit-form label { font-size: 13px; }
+    .btn-save-edit { font-size: 15px; padding: 11px; }
+    .btn-cancel-edit { font-size: 15px; padding: 11px; }
+    .add-emp-section { margin: 14px 28px 24px; }
+    .add-emp-toggle { font-size: 16px; padding: 14px; }
+    .add-emp-form { padding: 18px; }
+    .add-emp-form input { font-size: 16px; padding: 10px 12px; }
+    .add-emp-form label { font-size: 14px; }
+    .btn-add-confirm { font-size: 16px; padding: 13px; }
+    .report-summary { margin: 18px 28px 14px; gap: 12px; }
+    .report-summary-card { padding: 14px 8px; border-radius: 12px; }
+    .report-summary-val { font-size: 22px; }
+    .report-summary-lbl { font-size: 12px; }
+    .report-table-wrap { margin: 0 28px 24px; }
+    .report-table { font-size: 15px; }
+    .report-table thead th { font-size: 14px; padding: 12px 16px; }
+    .report-table tbody td { padding: 12px 16px; font-size: 15px; }
+    .emp-select-list { padding: 16px 28px 24px; }
+    .emp-select-card { padding: 16px 18px; margin-bottom: 12px; }
+    .emp-select-avatar { width: 54px; height: 54px; font-size: 17px; }
+    .emp-select-name { font-size: 18px; }
+    .emp-select-meta { font-size: 14px; }
+    .emp-select-arrow { font-size: 24px; }
+    .report-topbar-sub { padding: 16px 32px; }
+    .report-emp-name { font-size: 20px; }
+    .report-month-nav span { font-size: 16px; min-width: 110px; }
+    .report-month-nav button { width: 34px; height: 34px; font-size: 20px; }
+    .setup-banner { margin: 20px 28px; font-size: 15px; line-height: 1.7; }
+    .setup-banner input { font-size: 14px; padding: 10px 12px; }
+    .setup-banner button { font-size: 15px; padding: 11px; }
+    .error-banner { margin: 0 28px 16px; font-size: 14px; }
+    .loading-msg { font-size: 16px; }
+    .spinner { width: 40px; height: 40px; }
+  }
+
+  /* Large tablet / desktop — two column employee grid */
+  @media (min-width: 768px) {
+    #emp-rows { display: grid; grid-template-columns: 1fr 1fr; }
+    #emp-rows .emp-row { border-right: 1px solid #eee; }
+    #emp-rows .emp-row:nth-child(even) { border-right: none; }
+    .report-summary { grid-template-columns: repeat(4, 1fr); }
+    .cal-day { font-size: 18px; padding: 16px 4px; }
+  }
+
+  /* SYNC BAR */
+  .sync-bar { background: #f0f7ff; border-bottom: 1px solid #cce0f5; padding: 7px 14px; display: flex; align-items: center; gap: 7px; font-size: 12px; color: #185FA5; }
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #1D9E75; flex-shrink: 0; transition: background 0.3s; }
+  .sync-dot.syncing { background: #EF9F27; animation: pulse 0.9s infinite; }
+  .sync-dot.error { background: #E24B4A; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* LOADING OVERLAY */
+  .loading-overlay { display:none; position:absolute; inset:0; background:rgba(255,255,255,0.92); z-index:20; flex-direction:column; align-items:center; justify-content:center; gap:12px; border-radius:16px; }
+  .loading-overlay.show { display: flex; }
+  .spinner { width:32px; height:32px; border:3px solid #e0e0e0; border-top-color:#185FA5; border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { font-size: 13px; color: #555; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CALENDAR */
+  .cal-nav { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; }
+  .cal-nav span { font-size:15px; font-weight:500; color:#1a1a1a; }
+  .cal-nav button { background:none; border:1px solid #ccc; border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:18px; color:#333; }
+  .cal-grid { padding: 0 12px 12px; }
+  .day-labels { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
+  .day-label { text-align:center; font-size:11px; font-weight:500; color:#888; padding:4px 0; }
+  .cal-days { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-day { text-align:center; padding:8px 3px; border-radius:6px; cursor:pointer; font-size:13px; color:#333; border:1px solid transparent; transition:background 0.15s; position:relative; }
+  .cal-day:hover:not(.empty) { background:#f5f5f5; border-color:#ddd; }
+  .cal-day.today { background:#E6F1FB; color:#185FA5; font-weight:600; }
+  .cal-day.has-data::after { content:''; position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:#185FA5; }
+  .cal-day.has-leave::after { background: #E24B4A; }
+  .cal-day.empty { cursor: default; }
+
+  /* LEGEND */
+  .legend { display:flex; gap:12px; padding:0 16px 12px; align-items:center; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-size:11px; color:#777; }
+  .dot { width:7px; height:7px; border-radius:50%; background:#185FA5; }
+  .dot.today-dot { background:#1D9E75; }
+  .dot.leave-dot { background:#E24B4A; }
+
+  /* STATS */
+  .stats-section { margin: 0 12px 16px; }
+  .stats-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .stats-header h3 { font-size:11px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+  .manage-btn { display:flex; align-items:center; gap:5px; background:#185FA5; color:#fff; border:none; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:500; cursor:pointer; }
+  .stats-bar { background:#f8f9fa; border-radius:10px; padding:12px; border:1px solid #e8e8e8; }
+  .emp-stat { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #ebebeb; }
+  .emp-stat:last-child { border-bottom:none; }
+  .emp-name-s { font-size:13px; color:#333; font-weight:500; }
+  .emp-meta { font-size:11px; color:#888; margin-top:1px; }
+  .emp-earning { font-size:13px; font-weight:600; color:#185FA5; }
+
+  /* LOG PAGE */
+  .log-header { padding:12px 16px; border-bottom:1px solid #eee; }
+  .log-date { font-size:12px; color:#888; margin-bottom:2px; }
+  .log-title { font-size:15px; font-weight:600; color:#1a1a1a; }
+
+  /* EMPLOYEE ROW */
+  .emp-row { padding:12px 16px; border-bottom:1px solid #eee; transition:background 0.2s; }
+  .emp-row.on-leave { background:#fff5f5; }
+  .emp-row-top { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:#E6F1FB; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#185FA5; flex-shrink:0; }
+  .emp-label { font-size:14px; font-weight:500; color:#1a1a1a; flex:1; }
+
+  /* LEAVE TOGGLE */
+  .leave-toggle-wrap { display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .leave-toggle-label { font-size:11px; color:#888; }
+  .toggle-switch { position:relative; display:inline-block; width:40px; height:22px; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; inset:0; background:#ddd; border-radius:22px; cursor:pointer; transition:background 0.2s; }
+  .toggle-slider:before { content:''; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:transform 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background:#E24B4A; }
+  .toggle-switch input:checked + .toggle-slider:before { transform:translateX(18px); }
+
+
+
+  /* HOURS INPUT */
+  .hours-input-wrap { display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .hours-input-wrap label { font-size:12px; color:#888; white-space:nowrap; }
+  .hours-input-wrap input { width:90px; padding:8px 10px; font-size:15px; font-weight:600; border:1px solid #ccc; border-radius:8px; background:#fff; color:#185FA5; text-align:center; }
+  .hours-input-wrap input:disabled { background:#f5f5f5; color:#bbb; border-color:#eee; }
+  .earning-badge { font-size:12px; color:#1D9E75; font-weight:600; margin-left:auto; }
+
+  /* SAVE BUTTON */
+  .save-btn { margin:14px 16px; width:calc(100% - 32px); padding:11px; background:#185FA5; color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .save-btn:active { opacity:0.85; }
+  .saved-toast { display:none; margin:0 16px 14px; padding:8px 12px; background:#EAF3DE; border-radius:8px; font-size:12px; color:#3B6D11; text-align:center; font-weight:500; }
+
+  /* MANAGE EMPLOYEES */
+  .emp-card { margin:10px 12px; background:#f8f9fa; border-radius:12px; border:1px solid #e8e8e8; overflow:hidden; }
+  .emp-card-header { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid #eee; }
+  .emp-card-avatar { width:38px; height:38px; border-radius:50%; background:#E6F1FB; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#185FA5; flex-shrink:0; }
+  .emp-card-name { font-size:14px; font-weight:500; color:#1a1a1a; flex:1; }
+  .emp-card-actions { display:flex; gap:6px; }
+  .edit-btn { background:#E6F1FB; border:none; border-radius:6px; color:#185FA5; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; }
+  .delete-btn { background:#FCEBEB; border:none; border-radius:6px; color:#A32D2D; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px; }
+  .emp-card-body { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; }
+  .rate-info { font-size:12px; color:#888; }
+  .rate-value { font-size:14px; font-weight:600; color:#185FA5; }
+  .edit-form { padding:10px 14px; border-top:1px solid #eee; background:#fff; }
+  .edit-form label { font-size:11px; color:#888; display:block; margin-bottom:3px; margin-top:8px; }
+  .edit-form label:first-child { margin-top:0; }
+  .edit-form input { width:100%; padding:8px 10px; font-size:13px; border:1px solid #ccc; border-radius:8px; background:#fff; color:#333; }
+  .edit-form-actions { display:flex; gap:8px; margin-top:10px; }
+  .btn-save-edit { flex:1; padding:8px; background:#185FA5; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; }
+  .btn-cancel-edit { flex:1; padding:8px; background:#f0f0f0; color:#555; border:none; border-radius:8px; font-size:13px; cursor:pointer; }
+  .add-emp-section { margin:10px 12px 16px; }
+  .add-emp-toggle { width:100%; padding:10px; background:#EAF3DE; color:#3B6D11; border:1px dashed #8BC34A; border-radius:10px; font-size:13px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .add-emp-form { background:#f8f9fa; border-radius:12px; border:1px solid #e8e8e8; padding:14px; margin-top:8px; display:none; }
+  .add-emp-form.open { display:block; }
+  .add-emp-form label { font-size:11px; color:#888; display:block; margin-bottom:3px; margin-top:8px; }
+  .add-emp-form label:first-child { margin-top:0; }
+  .add-emp-form input { width:100%; padding:8px 10px; font-size:13px; border:1px solid #ccc; border-radius:8px; background:#fff; color:#333; }
+  .btn-add-confirm { width:100%; margin-top:10px; padding:9px; background:#185FA5; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; }
+  .delete-confirm { padding:10px 14px; border-top:1px solid #eee; background:#fff8f8; display:flex; align-items:center; gap:8px; }
+  .delete-confirm span { font-size:12px; color:#A32D2D; flex:1; }
+  .btn-confirm-del { padding:6px 12px; background:#A32D2D; color:#fff; border:none; border-radius:6px; font-size:12px; cursor:pointer; }
+  .btn-cancel-del { padding:6px 12px; background:#f0f0f0; color:#555; border:none; border-radius:6px; font-size:12px; cursor:pointer; }
+
+  /* REPORT PAGE */
+  .report-topbar-sub { padding:10px 16px; background:#f0f7ff; border-bottom:1px solid #cce0f5; display:flex; align-items:center; justify-content:space-between; }
+  .report-emp-name { font-size:14px; font-weight:600; color:#185FA5; }
+  .report-month-nav { display:flex; align-items:center; gap:8px; }
+  .report-month-nav button { background:none; border:1px solid #ccc; border-radius:6px; width:26px; height:26px; cursor:pointer; font-size:15px; color:#333; }
+  .report-month-nav span { font-size:12px; color:#555; font-weight:500; min-width:80px; text-align:center; }
+  .report-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:12px 12px 8px; }
+  .report-summary-card { background:#f8f9fa; border:1px solid #e8e8e8; border-radius:10px; padding:8px 4px; text-align:center; }
+  .report-summary-val { font-size:15px; font-weight:700; color:#185FA5; }
+  .report-summary-val.leave-val { color:#E24B4A; }
+  .report-summary-lbl { font-size:9px; color:#888; margin-top:2px; }
+  .report-table-wrap { margin:0 12px 16px; border:1px solid #e8e8e8; border-radius:10px; overflow:hidden; }
+  .report-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .report-table thead tr { background:#185FA5; }
+  .report-table thead th { color:#fff; padding:8px 8px; text-align:left; font-weight:500; font-size:11px; }
+  .report-table tbody tr { border-bottom:1px solid #f0f0f0; }
+  .report-table tbody tr:last-child { border-bottom:none; }
+  .report-table tbody tr:nth-child(even) { background:#f8f9fa; }
+  .report-table tbody tr.leave-row { background:#fff5f5; }
+  .report-table tbody tr.absent-row td { color:#ccc; }
+  .report-table tbody td { padding:7px 8px; color:#333; }
+  .report-table tbody td.day-col { font-weight:500; color:#555; white-space:nowrap; }
+  /* Leave badge in report table */
+  .lbadge { display:inline-block; padding:1px 6px; border-radius:4px; font-size:10px; font-weight:600; background:#FCEBEB; color:#A32D2D; }
+
+  /* REPORT LIST */
+  .emp-select-list { padding:10px 12px 16px; }
+  .emp-select-card { display:flex; align-items:center; gap:12px; background:#f8f9fa; border:1px solid #e8e8e8; border-radius:12px; padding:12px 14px; margin-bottom:8px; cursor:pointer; transition:background 0.15s; }
+  .emp-select-card:hover { background:#E6F1FB; border-color:#b3d4f0; }
+  .emp-select-avatar { width:40px; height:40px; border-radius:50%; background:#E6F1FB; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#185FA5; flex-shrink:0; }
+  .emp-select-info { flex:1; }
+  .emp-select-name { font-size:14px; font-weight:500; color:#1a1a1a; }
+  .emp-select-meta { font-size:11px; color:#888; margin-top:2px; }
+  .emp-select-arrow { font-size:18px; color:#ccc; }
+
+  /* BANNERS */
+  .setup-banner { margin:12px; padding:12px 14px; background:#FAEEDA; border-radius:10px; border:1px solid #EF9F27; font-size:12px; color:#633806; line-height:1.5; }
+  .setup-banner strong { display:block; margin-bottom:4px; font-size:13px; }
+  .setup-banner input { width:100%; margin-top:6px; padding:7px 10px; font-size:12px; border:1px solid #BA7517; border-radius:7px; background:#fff; color:#333; }
+  .setup-banner button { margin-top:6px; width:100%; padding:8px; background:#185FA5; color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; }
+  .error-banner { margin:0 12px 12px; padding:10px 14px; background:#FCEBEB; border-radius:10px; border:1px solid #F09595; font-size:12px; color:#A32D2D; display:none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- PAGE 1 — CALENDAR -->
+  <div class="page active" id="page-cal">
+    <div class="topbar">
+      <i class="ti ti-calendar" style="color:#fff;font-size:20px"></i>
+      <h1>Attendance Tracker</h1>
+    </div>
+    <div class="sync-bar" id="sync-bar-btn" style="cursor:pointer" title="Tap to sync now">
+      <div class="sync-dot syncing" id="sync-dot"></div>
+      <span id="sync-label">Connecting to Google Sheets...</span>
+      <i class="ti ti-refresh" style="margin-left:auto;font-size:14px;opacity:0.6"></i>
+    </div>
+    <div class="setup-banner" id="setup-banner" style="display:none">
+      <strong>⚠ Connect to Google Sheets to save data</strong>
+      Paste your Google Apps Script Web App URL below and tap Save.
+      <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/...">
+      <button onclick="saveScriptUrl()">Save &amp; Connect</button>
+    </div>
+    <div class="error-banner" id="error-banner" style="display:none">
+      <div id="error-detail">⚠ Could not reach Google Sheets.</div>
+      <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+        <a href="#" onclick="showDebugPanel();return false;" style="color:#A32D2D;font-weight:600;font-size:11px">🔍 Run Diagnostics</a>
+        <a href="#" onclick="resetUrl();return false;"       style="color:#A32D2D;font-weight:600;font-size:11px">✏️ Change URL</a>
+        <a href="#" onclick="silentSync();return false;"     style="color:#A32D2D;font-weight:600;font-size:11px">🔄 Retry</a>
+      </div>
+    </div>
+    <!-- Debug panel — shows step-by-step what's failing -->
+    <div id="debug-panel" style="display:none;margin:0 12px 12px;padding:12px;background:#1e1e2e;border-radius:10px;font-family:monospace;font-size:11px;color:#cdd6f4;max-height:220px;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="color:#a6e3a1;font-weight:600">🔍 Diagnostics</span>
+        <a href="#" onclick="document.getElementById('debug-panel').style.display='none';return false;" style="color:#6c7086;font-size:10px">close</a>
+      </div>
+      <div id="debug-log"></div>
+    </div>
+    <div class="cal-nav">
+      <button id="prev-month">&#8249;</button>
+      <span id="month-label"></span>
+      <button id="next-month">&#8250;</button>
+    </div>
+    <div class="cal-grid">
+      <div class="day-labels">
+        <div class="day-label">Su</div><div class="day-label">Mo</div><div class="day-label">Tu</div>
+        <div class="day-label">We</div><div class="day-label">Th</div><div class="day-label">Fr</div>
+        <div class="day-label">Sa</div>
+      </div>
+      <div class="cal-days" id="cal-days"></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="dot today-dot"></div> Today</div>
+      <div class="legend-item"><div class="dot"></div> Has logs</div>
+      <div class="legend-item"><div class="dot leave-dot"></div> Has leave</div>
+    </div>
+    <div class="stats-section">
+      <div class="stats-header">
+        <h3>Monthly Earnings — <span id="stats-month-label"></span></h3>
+        <div style="display:flex;gap:6px">
+          <button class="manage-btn" id="go-report-btn" style="background:#1D9E75">
+            <i class="ti ti-report-analytics"></i> Reports
+          </button>
+          <button class="manage-btn" id="go-manage-btn">
+            <i class="ti ti-users"></i> Manage
+          </button>
+        </div>
+      </div>
+      <div class="stats-bar"><div id="emp-stats-list"></div></div>
+    </div>
+  </div>
+
+  <!-- PAGE 2 — LOG ENTRY -->
+  <div class="page" id="page-log">
+    <div class="topbar">
+      <button class="back-btn" id="back-btn">&#8249;</button>
+      <h1>Log Attendance</h1>
+    </div>
+    <div class="log-header">
+      <div class="log-date" id="log-date-sub"></div>
+      <div class="log-title" id="log-date-main"></div>
+    </div>
+    <div id="emp-rows"></div>
+    <button class="save-btn" id="save-btn">
+      <i class="ti ti-device-floppy"></i> Save &amp; Sync to Google Sheets
+    </button>
+    <div class="saved-toast" id="saved-toast">✓ Saved to Google Sheets</div>
+  </div>
+
+  <!-- PAGE 3 — MANAGE EMPLOYEES -->
+  <div class="page" id="page-manage">
+    <div class="topbar">
+      <button class="back-btn" id="back-manage-btn">&#8249;</button>
+      <h1>Manage Employees</h1>
+    </div>
+    <div id="emp-card-list"></div>
+    <div class="add-emp-section">
+      <button class="add-emp-toggle" id="add-emp-toggle">
+        <i class="ti ti-plus"></i> Add New Employee
+      </button>
+      <div class="add-emp-form" id="add-emp-form">
+        <label>Full Name</label>
+        <input type="text" id="new-emp-name" placeholder="e.g. Rahul Kumar">
+        <label>Hourly Rate (₹)</label>
+        <input type="number" id="new-emp-rate" placeholder="e.g. 150" min="0">
+        <button class="btn-add-confirm" id="btn-add-confirm">
+          <i class="ti ti-check"></i> Add Employee
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 4 — REPORT LIST -->
+  <div class="page" id="page-report-list">
+    <div class="topbar">
+      <button class="back-btn" id="back-report-list-btn">&#8249;</button>
+      <h1>Employee Reports</h1>
+    </div>
+    <div class="emp-select-list" id="emp-select-list"></div>
+  </div>
+
+  <!-- PAGE 5 — INDIVIDUAL REPORT -->
+  <div class="page" id="page-report">
+    <div class="topbar">
+      <button class="back-btn" id="back-report-btn">&#8249;</button>
+      <h1>Monthly Report</h1>
+    </div>
+    <div class="report-topbar-sub">
+      <span class="report-emp-name" id="report-emp-name"></span>
+      <div class="report-month-nav">
+        <button id="report-prev-month">&#8249;</button>
+        <span id="report-month-label"></span>
+        <button id="report-next-month">&#8250;</button>
+      </div>
+    </div>
+    <div class="report-summary" id="report-summary"></div>
+    <div class="report-table-wrap">
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Day</th>
+            <th>Status</th>
+            <th>Hrs</th>
+            <th>Earned</th>
+          </tr>
+        </thead>
+        <tbody id="report-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay show" id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-msg" id="loading-msg">Loading data from Google Sheets...</div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════
+let SCRIPT_URL = localStorage.getItem('attendance_script_url') || '';
+
+let EMPLOYEES = [
+  { name: 'Aarav Singh',  rate: 150 },
+  { name: 'Priya Sharma', rate: 200 },
+  { name: 'Rohit Mehta',  rate: 175 },
+  { name: 'Sunita Gupta', rate: 160 },
+  { name: 'Deepak Verma', rate: 190 }
+];
+
+// logs shape: { "YYYY-MM-DD": { "Emp Name": { hours: "8", leave: "" } } }
+// leave: "" = present/absent, "leave" = on leave
+let state = { month: new Date().getMonth(), year: new Date().getFullYear(), logs: {} };
+let selectedDate  = null;
+let reportState   = { empIndex: 0, month: new Date().getMonth(), year: new Date().getFullYear() };
+
+// ═══════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════
+function setSyncStatus(status, msg) {
+  const dot = document.getElementById('sync-dot');
+  dot.className = 'sync-dot' + (status === 'syncing' ? ' syncing' : status === 'error' ? ' error' : '');
+  document.getElementById('sync-label').textContent = msg;
+}
+function showLoading(v, msg) {
+  document.getElementById('loading-overlay').classList.toggle('show', v);
+  if (msg) document.getElementById('loading-msg').textContent = msg;
+}
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════════════
+// GOOGLE SHEETS API
+// ═══════════════════════════════════════════════
+async function apiCall(params) {
+  if (!SCRIPT_URL) throw new Error('No script URL');
+  params._ts = Date.now();
+  const isSave = params.action && params.action.startsWith('save');
+  return isSave ? await postCall(params) : await getCall(params);
+}
+
+async function getCall(params) {
+  const url  = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const res  = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store' });
+  const text = await res.text();
+  const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
+  try { return JSON.parse(clean); }
+  catch(e) { console.error('Bad response:', text.substring(0,300)); throw new Error('Invalid response'); }
+}
+
+async function postCall(params) {
+  const body = new URLSearchParams(params).toString();
+  const res  = await fetch(SCRIPT_URL, {
+    method:'POST', redirect:'follow', cache:'no-store',
+    headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body
+  });
+  const text  = await res.text();
+  const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
+  try { return JSON.parse(clean); }
+  catch(e) { console.error('Bad POST response:', text.substring(0,300)); throw new Error('Invalid response'); }
+}
+
+// ═══════════════════════════════════════════════
+// LOCAL CACHE
+// ═══════════════════════════════════════════════
+const LOCAL_CACHE = {
+  get(k)    { try { const v = localStorage.getItem('att_'+k); return v ? JSON.parse(v) : null; } catch(e){ return null; } },
+  set(k, d) { try { localStorage.setItem('att_'+k, JSON.stringify(d)); } catch(e){} },
+  clear(k)  { try { localStorage.removeItem('att_'+k); } catch(e){} }
+};
+const EMP_CACHE_KEY = 'att_employees';
+
+function monthKey(y, m) { return `${y}-${String(m+1).padStart(2,'0')}`; }
+
+// ═══════════════════════════════════════════════
+// DIRTY TRACKING — only save rows that changed
+// ═══════════════════════════════════════════════
+const dirtyKeys = new Set(); // "YYYY-MM-DD|EmpName"
+
+function markDirty(dk, empName) { dirtyKeys.add(dk + '|' + empName); }
+function clearDirty()           { dirtyKeys.clear(); }
+
+// ═══════════════════════════════════════════════
+// ROW PARSING
+// ═══════════════════════════════════════════════
+function mergeLogRows(rows) {
+  if (!rows || !rows.length) return;
+  rows.forEach(row => {
+    const date    = String(row[0]||'').trim();
+    const empName = String(row[1]||'').trim();
+    const hours   = String(row[2]||'').trim();
+    const leave   = String(row[4]||'').trim();
+    if (!date || !empName) return;
+    if (!state.logs[date]) {
+      state.logs[date] = {};
+      EMPLOYEES.forEach(e => { state.logs[date][e.name] = { hours:'', leave:'', _wasInSheet:false }; });
+    }
+    state.logs[date][empName] = { hours, leave, _wasInSheet:true };
+  });
+}
+
+// ═══════════════════════════════════════════════
+// LOAD — Optimization 3: show cache instantly,
+// fetch fresh data in background
+// ═══════════════════════════════════════════════
+async function loadAllFromSheets() {
+  if (!SCRIPT_URL) {
+    document.getElementById('setup-banner').style.display = 'block';
+    showLoading(false);
+    setSyncStatus('error', 'Not connected — paste your Script URL above');
+    renderCalendar();
+    return;
+  }
+  document.getElementById('error-banner').style.display = 'none';
+
+  // Step 1 — show cached data INSTANTLY (zero wait)
+  const cachedEmps = LOCAL_CACHE.get(EMP_CACHE_KEY);
+  const mk         = monthKey(state.year, state.month);
+  const cachedLogs = LOCAL_CACHE.get(mk);
+
+  if (cachedEmps) EMPLOYEES = cachedEmps;
+  if (cachedLogs) { mergeLogRows(cachedLogs); renderCalendar(); }
+
+  if (cachedEmps && cachedLogs) {
+    // Data shown instantly — now refresh silently in background
+    setSyncStatus('syncing', 'Checking for updates...');
+    showLoading(false);
+    _refreshInBackground(mk);
+    return;
+  }
+
+  // No cache — show loader and fetch
+  showLoading(true, `Loading ${MONTHS[state.month]} ${state.year}...`);
+  setSyncStatus('syncing', 'Loading...');
+  await _fetchFresh(mk);
+  showLoading(false);
+}
+
+// Optimization 1: single batched call for employees + logs
+async function _fetchFresh(mk) {
+  try {
+    // Single call that returns both employees and logs
+    const res = await apiCall({ action:'loadInit', month: mk });
+    if (res.employees && res.employees.length > 0) {
+      EMPLOYEES = res.employees.map(e => ({ name:String(e.name||'').trim(), rate:parseFloat(e.rate)||0 }));
+      LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
+    }
+    const rows = res.rows || [];
+    LOCAL_CACHE.set(mk, rows);
+    mergeLogRows(rows);
+    setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
+    renderCalendar();
+  } catch(err) {
+    console.error('_fetchFresh error:', err);
+    setSyncStatus('error', 'Failed: ' + (err.message||'').substring(0,40));
+    document.getElementById('error-detail').textContent = '⚠ ' + (err.message||'Unknown error');
+    document.getElementById('error-banner').style.display = 'block';
+    renderCalendar();
+  }
+}
+
+async function _refreshInBackground(mk) {
+  try {
+    const res = await apiCall({ action:'loadInit', month: mk });
+    if (res.employees && res.employees.length > 0) {
+      EMPLOYEES = res.employees.map(e => ({ name:String(e.name||'').trim(), rate:parseFloat(e.rate)||0 }));
+      LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
+    }
+    const rows = res.rows || [];
+    LOCAL_CACHE.set(mk, rows);
+    mergeLogRows(rows);
+    setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
+    renderCalendar();
+    if (document.getElementById('page-report').classList.contains('active'))      renderReport();
+    if (document.getElementById('page-report-list').classList.contains('active')) openReportList();
+  } catch(e) { setSyncStatus('error', 'Background sync failed'); }
+}
+
+async function loadMonth(y, m) {
+  const mk     = monthKey(y, m);
+  const cached = LOCAL_CACHE.get(mk);
+  if (cached) {
+    mergeLogRows(cached);
+    renderCalendar();
+    _refreshMonthOnly(y, m, mk); // silent background refresh
+    return;
+  }
+  setSyncStatus('syncing', `Loading ${MONTHS[m]}...`);
+  await _fetchFresh(mk);
+}
+
+async function _refreshMonthOnly(y, m, mk) {
+  try {
+    const logRes = await apiCall({ action:'loadLogs', month: mk });
+    const rows   = logRes?.rows || [];
+    LOCAL_CACHE.set(mk, rows);
+    mergeLogRows(rows);
+    renderCalendar();
+    if (document.getElementById('page-report').classList.contains('active')) renderReport();
+  } catch(e) { /* silent */ }
+}
+
+// ═══════════════════════════════════════════════
+// SAVE — Optimization 2: only send dirty rows
+// ═══════════════════════════════════════════════
+async function saveAllToSheets() {
+  if (!SCRIPT_URL) { alert('Please set up your Google Sheets Script URL first.'); return false; }
+  showLoading(true, 'Saving...');
+  setSyncStatus('syncing', 'Saving...');
+  try {
+    const mk   = monthKey(state.year, state.month);
+    const rows = [];
+
+    Object.keys(state.logs)
+      .filter(dk => dk.startsWith(mk))
+      .sort()
+      .forEach(dk => {
+        EMPLOYEES.forEach(emp => {
+          const rowKey = dk + '|' + emp.name;
+          const l      = state.logs[dk] && state.logs[dk][emp.name];
+          if (!l) return;
+
+          // Optimization 2: skip rows that haven't changed
+          if (!dirtyKeys.has(rowKey) && !l._wasInSheet) return;
+
+          const h       = getHours(l);
+          const isLeave = l.leave === 'leave';
+          if (h > 0 || isLeave) {
+            rows.push([dk, emp.name, h||0, Math.round(h * emp.rate), l.leave||'']);
+          } else if (l._wasInSheet || dirtyKeys.has(rowKey)) {
+            rows.push([dk, emp.name, '', '', '']); // delete signal
+          }
+        });
+      });
+
+    // Run logs + employees save in parallel (Optimization 1)
+    await Promise.all([
+      apiCall({ action:'saveLogs',      month:mk, data:JSON.stringify(rows) }),
+      apiCall({ action:'saveEmployees',           data:JSON.stringify(EMPLOYEES.map(e=>({ name:e.name, rate:e.rate }))) })
+    ]);
+
+    clearDirty();
+    LOCAL_CACHE.clear(mk);
+    LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
+    setSyncStatus('ok', 'Saved ✓  ' + new Date().toLocaleTimeString());
+    showLoading(false);
+    return true;
+  } catch(err) {
+    console.error(err);
+    setSyncStatus('error', 'Save failed — check connection');
+    showLoading(false);
+    return false;
+  }
+}
+
+function saveScriptUrl() {
+  const url = document.getElementById('script-url-input').value.trim();
+  if (!url.startsWith('https://script.google.com')) { alert('Please paste a valid Google Apps Script URL.'); return; }
+  SCRIPT_URL = url;
+  localStorage.setItem('attendance_script_url', url);
+  document.getElementById('setup-banner').style.display = 'none';
+  loadAllFromSheets();
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function dateKey(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+function initDayLogs(dk) {
+  if (!state.logs[dk]) state.logs[dk] = {};
+  EMPLOYEES.forEach(e => {
+    if (!state.logs[dk][e.name]) state.logs[dk][e.name] = { hours:'', leave:'', _wasInSheet: false };
+  });
+}
+
+function getHours(log) {
+  if (!log) return 0;
+  const h = parseFloat(log.hours);
+  return isNaN(h) || h < 0 ? 0 : h;
+}
+
+function initials(name) {
+  if (!name) return '?';
+  return name.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().substring(0, 2);
+}
+
+// ═══════════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════════
+function renderCalendar() {
+  const { month, year } = state;
+  document.getElementById('month-label').textContent       = `${MONTHS[month]} ${year}`;
+  document.getElementById('stats-month-label').textContent = `${MONTHS[month].slice(0,3)} ${year}`;
+
+  const firstDay  = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month+1, 0).getDate();
+  const today     = new Date();
+  const grid      = document.getElementById('cal-days');
+  grid.innerHTML  = '';
+
+  for (let i = 0; i < firstDay; i++) {
+    const e = document.createElement('div'); e.className = 'cal-day empty'; grid.appendChild(e);
+  }
+
+  for (let d = 1; d <= totalDays; d++) {
+    const dk  = dateKey(year, month, d);
+    const div = document.createElement('div');
+    div.className = 'cal-day';
+    if (d === today.getDate() && month === today.getMonth() && year === today.getFullYear()) div.classList.add('today');
+
+    const dayLogs = state.logs[dk];
+    const hasHours = dayLogs && EMPLOYEES.some(e => getHours(dayLogs[e.name]) > 0);
+    const hasLeave = dayLogs && EMPLOYEES.some(e => dayLogs[e.name] && dayLogs[e.name].leave === 'leave');
+
+    if (hasLeave) div.classList.add('has-leave');
+    else if (hasHours) div.classList.add('has-data');
+
+    div.textContent = d;
+    div.addEventListener('click', () => openLogPage(d));
+    grid.appendChild(div);
+  }
+  renderStats();
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+function renderStats() {
+  const { month, year } = state;
+  const totalDays = new Date(year, month+1, 0).getDate();
+  const list = document.getElementById('emp-stats-list');
+  list.innerHTML = '';
+
+  EMPLOYEES.forEach(emp => {
+    let totalHours = 0, leaveDays = 0;
+    for (let d = 1; d <= totalDays; d++) {
+      const dk = dateKey(year, month, d);
+      if (state.logs[dk] && state.logs[dk][emp.name]) {
+        totalHours += getHours(state.logs[dk][emp.name]);
+        if (state.logs[dk][emp.name].leave === 'leave') leaveDays++;
+      }
+    }
+    const earning = totalHours * emp.rate;
+    const row = document.createElement('div');
+    row.className = 'emp-stat';
+    row.innerHTML = `
+      <div>
+        <div class="emp-name-s">${emp.name.split(' ')[0]}</div>
+        <div class="emp-meta">${totalHours.toFixed(1)} hrs · ${leaveDays} leave day${leaveDays !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="emp-earning">₹${Math.round(earning).toLocaleString('en-IN')}</div>`;
+    list.appendChild(row);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// LOG PAGE
+// ═══════════════════════════════════════════════
+function openLogPage(d) {
+  selectedDate = { d, m: state.month, y: state.year };
+  const dk = dateKey(state.year, state.month, d);
+  initDayLogs(dk);
+  const dt = new Date(state.year, state.month, d);
+  document.getElementById('log-date-sub').textContent  = DAYS[dt.getDay()];
+  document.getElementById('log-date-main').textContent = `${d} ${MONTHS[state.month]} ${state.year}`;
+  renderEmpRows(dk);
+  document.getElementById('saved-toast').style.display = 'none';
+  showPage('page-log');
+}
+
+function renderEmpRows(dk) {
+  const container = document.getElementById('emp-rows');
+  container.innerHTML = '';
+
+  EMPLOYEES.forEach(emp => {
+    const log = (state.logs[dk] && state.logs[dk][emp.name]) ? state.logs[dk][emp.name] : { hours:'', leave:'' };
+    const ini     = initials(emp.name);
+    const isLeave = log.leave === 'leave';
+    const h       = getHours(log);
+
+    const div = document.createElement('div');
+    div.className = 'emp-row' + (isLeave ? ' on-leave' : '');
+    div.id = `emprow-${ini}`;
+
+    div.innerHTML = `
+      <div class="emp-row-top">
+        <div class="avatar">${ini}</div>
+        <span class="emp-label">${emp.name}</span>
+        <div class="leave-toggle-wrap">
+          <span class="leave-toggle-label">On Leave</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="ltog-${ini}" ${isLeave ? 'checked' : ''} onchange="toggleLeave('${ini}','${emp.name}')">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="hours-input-wrap" id="hwrap-${ini}" ${isLeave ? 'style="opacity:0.3;pointer-events:none"' : ''}>
+        <label>Hours worked</label>
+        <input type="number" min="0" max="24" step="0.5"
+               value="${log.hours || ''}" placeholder="0"
+               id="hinp-${ini}" ${isLeave ? 'disabled' : ''}>
+        <span class="earning-badge" id="earn-${ini}">${h > 0 ? '₹' + Math.round(h * emp.rate).toLocaleString('en-IN') : ''}</span>
+      </div>`;
+    container.appendChild(div);
+
+    div.querySelector(`#hinp-${ini}`).addEventListener('input', e => {
+      const val = e.target.value;
+      const dkc = dateKey(selectedDate.y, selectedDate.m, selectedDate.d);
+      if (!state.logs[dkc]) state.logs[dkc] = {};
+      if (!state.logs[dkc][emp.name]) state.logs[dkc][emp.name] = { hours:'', leave:'', _wasInSheet:false };
+      state.logs[dkc][emp.name].hours = val;
+      markDirty(dkc, emp.name);
+      const hrs = parseFloat(val) || 0;
+      document.getElementById(`earn-${ini}`).textContent = hrs > 0 ? '₹' + Math.round(hrs * emp.rate).toLocaleString('en-IN') : '';
+    });
+  });
+}
+
+function toggleLeave(ini, empName) {
+  const checked = document.getElementById(`ltog-${ini}`).checked;
+  const dkc     = dateKey(selectedDate.y, selectedDate.m, selectedDate.d);
+  if (!state.logs[dkc])           state.logs[dkc] = {};
+  if (!state.logs[dkc][empName])  state.logs[dkc][empName] = { hours:'', leave:'', _wasInSheet:false };
+  state.logs[dkc][empName].leave = checked ? 'leave' : '';
+  markDirty(dkc, empName);
+  const row   = document.getElementById(`emprow-${ini}`);
+  const hwrap = document.getElementById(`hwrap-${ini}`);
+  const hinp  = document.getElementById(`hinp-${ini}`);
+  row.classList.toggle('on-leave', checked);
+  hwrap.style.opacity       = checked ? '0.3' : '1';
+  hwrap.style.pointerEvents = checked ? 'none' : '';
+  hinp.disabled             = checked;
+}
+
+// ═══════════════════════════════════════════════
+// MANAGE EMPLOYEES
+// ═══════════════════════════════════════════════
+function renderManagePage() {
+  const container = document.getElementById('emp-card-list');
+  container.innerHTML = '';
+  EMPLOYEES.forEach((emp, idx) => {
+    const ini  = initials(emp.name);
+    const card = document.createElement('div');
+    card.className = 'emp-card'; card.id = `emp-card-${idx}`;
+    card.innerHTML = `
+      <div class="emp-card-header">
+        <div class="emp-card-avatar">${ini}</div>
+        <span class="emp-card-name">${emp.name}</span>
+        <div class="emp-card-actions">
+          <button class="edit-btn"   onclick="startEdit(${idx})"><i class="ti ti-edit"></i></button>
+          <button class="delete-btn" onclick="startDelete(${idx})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div class="emp-card-body">
+        <span class="rate-info">Hourly Rate</span>
+        <span class="rate-value">₹${emp.rate}/hr</span>
+      </div>`;
+    container.appendChild(card);
+  });
+  document.getElementById('add-emp-form').classList.remove('open');
+  document.getElementById('new-emp-name').value = '';
+  document.getElementById('new-emp-rate').value = '';
+}
+
+function startEdit(idx) {
+  renderManagePage();
+  const card = document.getElementById(`emp-card-${idx}`);
+  const emp  = EMPLOYEES[idx];
+  const form = document.createElement('div');
+  form.className = 'edit-form';
+  form.innerHTML = `
+    <label>Full Name</label>
+    <input type="text" id="edit-name-${idx}" value="${emp.name}">
+    <label>Hourly Rate (₹)</label>
+    <input type="number" id="edit-rate-${idx}" value="${emp.rate}" min="0">
+    <div class="edit-form-actions">
+      <button class="btn-cancel-edit" onclick="renderManagePage()">Cancel</button>
+      <button class="btn-save-edit"   onclick="saveEdit(${idx})">Save</button>
+    </div>`;
+  card.appendChild(form);
+}
+
+async function saveEdit(idx) {
+  const newName = document.getElementById(`edit-name-${idx}`).value.trim();
+  const newRate = parseFloat(document.getElementById(`edit-rate-${idx}`).value);
+  if (!newName || isNaN(newRate) || newRate < 0) { alert('Please enter a valid name and rate.'); return; }
+  const oldName = EMPLOYEES[idx].name;
+  EMPLOYEES[idx] = { name: newName, rate: newRate };
+  // Rename all log entries and mark them dirty so they get saved
+  Object.keys(state.logs).forEach(dk => {
+    if (state.logs[dk][oldName] !== undefined) {
+      state.logs[dk][newName] = { ...state.logs[dk][oldName], _wasInSheet: true };
+      if (oldName !== newName) delete state.logs[dk][oldName];
+      markDirty(dk, newName);
+    }
+  });
+  await saveAllToSheets();
+  renderManagePage();
+  renderCalendar();
+}
+
+function startDelete(idx) {
+  renderManagePage();
+  const card = document.getElementById(`emp-card-${idx}`);
+  const conf = document.createElement('div');
+  conf.className = 'delete-confirm';
+  conf.innerHTML = `
+    <span>Remove <strong>${EMPLOYEES[idx].name}</strong>?</span>
+    <button class="btn-cancel-del"  onclick="renderManagePage()">No</button>
+    <button class="btn-confirm-del" onclick="confirmDelete(${idx})">Yes, remove</button>`;
+  card.appendChild(conf);
+}
+
+async function confirmDelete(idx) {
+  const name = EMPLOYEES[idx].name;
+  EMPLOYEES.splice(idx, 1);
+  // Mark all existing log entries for this employee as blank (delete signal)
+  Object.keys(state.logs).forEach(dk => {
+    if (state.logs[dk][name]) {
+      state.logs[dk][name] = { hours:'', leave:'', _wasInSheet: true };
+      markDirty(dk, name);
+    }
+  });
+  await saveAllToSheets();
+  // Now remove from state after saving
+  Object.keys(state.logs).forEach(dk => { delete state.logs[dk][name]; });
+  renderManagePage();
+  renderCalendar();
+}
+
+document.getElementById('add-emp-toggle').addEventListener('click', () => {
+  document.getElementById('add-emp-form').classList.toggle('open');
+});
+document.getElementById('btn-add-confirm').addEventListener('click', async () => {
+  const name = document.getElementById('new-emp-name').value.trim();
+  const rate = parseFloat(document.getElementById('new-emp-rate').value);
+  if (!name || isNaN(rate) || rate < 0) { alert('Please enter a valid name and hourly rate.'); return; }
+  EMPLOYEES.push({ name, rate });
+  LOCAL_CACHE.clear(EMP_CACHE_KEY); // force fresh employee load on next sync
+  await saveAllToSheets();
+  renderManagePage();
+  renderCalendar();
+});
+
+// ═══════════════════════════════════════════════
+// EMPLOYEE MONTHLY REPORT
+// ═══════════════════════════════════════════════
+function openReportList() {
+  const container = document.getElementById('emp-select-list');
+  container.innerHTML = '';
+  EMPLOYEES.forEach((emp, idx) => {
+    const ini = initials(emp.name);
+    const { totalHours, leaveDays } = getEmpMonthStats(emp, state.month, state.year);
+    const card = document.createElement('div');
+    card.className = 'emp-select-card';
+    card.innerHTML = `
+      <div class="emp-select-avatar">${ini}</div>
+      <div class="emp-select-info">
+        <div class="emp-select-name">${emp.name}</div>
+        <div class="emp-select-meta">${totalHours.toFixed(1)} hrs · ${leaveDays} leave day${leaveDays!==1?'s':''} this month</div>
+      </div>
+      <span class="emp-select-arrow">›</span>`;
+    card.addEventListener('click', () => openReport(idx));
+    container.appendChild(card);
+  });
+  showPage('page-report-list');
+}
+
+function openReport(empIdx) {
+  reportState.empIndex = empIdx;
+  reportState.month    = state.month;
+  reportState.year     = state.year;
+  renderReport();
+  showPage('page-report');
+}
+
+function renderReport() {
+  const emp   = EMPLOYEES[reportState.empIndex];
+  const { month, year } = reportState;
+
+  document.getElementById('report-emp-name').textContent    = emp.name;
+  document.getElementById('report-month-label').textContent = `${MONTHS[month].slice(0,3)} ${year}`;
+
+  const totalDays = new Date(year, month+1, 0).getDate();
+  const tbody     = document.getElementById('report-tbody');
+  tbody.innerHTML = '';
+
+  let totalHours = 0, presentDays = 0, leaveDays = 0;
+
+  for (let d = 1; d <= totalDays; d++) {
+    const dk       = dateKey(year, month, d);
+    const log      = state.logs[dk] && state.logs[dk][emp.name];
+    const h        = getHours(log);
+    const isLeave  = log && log.leave === 'leave';
+    const dow       = new Date(year, month, d).getDay();
+    const isWeekend = dow === 0 || dow === 6;
+
+    if (h > 0) { totalHours += h; presentDays++; }
+    if (isLeave) leaveDays++;
+
+    const tr = document.createElement('tr');
+    if (isLeave) tr.classList.add('leave-row');
+    else if (!h) tr.classList.add('absent-row');
+
+    let statusCell = '<span style="color:#ccc">—</span>';
+    if (isLeave) statusCell = '<span class="lbadge">Leave</span>';
+    else if (h > 0) statusCell = '<span style="color:#1D9E75;font-size:10px;font-weight:600">Present</span>';
+
+    tr.innerHTML = `
+      <td class="day-col">${String(d).padStart(2,'0')}${isWeekend ? ' <span style="color:#EF9F27;font-size:9px">WE</span>' : ''}</td>
+      <td>${DAYS_SHORT[dow]}</td>
+      <td>${statusCell}</td>
+      <td>${h > 0 ? '<b>'+h.toFixed(1)+'</b>' : '<span style="color:#ccc">—</span>'}</td>
+      <td>${h > 0 ? '₹'+Math.round(h*emp.rate).toLocaleString('en-IN') : '<span style="color:#ccc">—</span>'}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  const earning  = totalHours * emp.rate;
+  const workdays = countWorkdays(year, month);
+  document.getElementById('report-summary').innerHTML = `
+    <div class="report-summary-card">
+      <div class="report-summary-val">${totalHours.toFixed(1)}</div>
+      <div class="report-summary-lbl">Total Hrs</div>
+    </div>
+    <div class="report-summary-card">
+      <div class="report-summary-val">${presentDays}/${workdays}</div>
+      <div class="report-summary-lbl">Present</div>
+    </div>
+    <div class="report-summary-card">
+      <div class="report-summary-val leave-val">${leaveDays}</div>
+      <div class="report-summary-lbl">Leave Days</div>
+    </div>
+    <div class="report-summary-card">
+      <div class="report-summary-val">₹${earning >= 1000 ? (Math.round(earning/1000)+'k') : Math.round(earning)}</div>
+      <div class="report-summary-lbl">Earned</div>
+    </div>`;
+}
+
+function getEmpMonthStats(emp, month, year) {
+  const totalDays = new Date(year, month+1, 0).getDate();
+  let totalHours = 0, leaveDays = 0;
+  for (let d = 1; d <= totalDays; d++) {
+    const dk = dateKey(year, month, d);
+    if (state.logs[dk] && state.logs[dk][emp.name]) {
+      totalHours += getHours(state.logs[dk][emp.name]);
+      if (state.logs[dk][emp.name].leave === 'leave') leaveDays++;
+    }
+  }
+  return { totalHours, leaveDays };
+}
+
+function countWorkdays(year, month) {
+  const total = new Date(year, month+1, 0).getDate();
+  let count = 0;
+  for (let d = 1; d <= total; d++) { const dow = new Date(year,month,d).getDay(); if(dow>0&&dow<6) count++; }
+  return count;
+}
+
+// ═══════════════════════════════════════════════
+// DEBUG & URL HELPERS
+// ═══════════════════════════════════════════════
+function resetUrl() {
+  document.getElementById('script-url-input').value = SCRIPT_URL;
+  document.getElementById('setup-banner').style.display = 'block';
+}
+
+function dbgLog(msg, color) {
+  const el = document.getElementById('debug-log');
+  if (!el) return;
+  const line = document.createElement('div');
+  line.style.color = color || '#cdd6f4';
+  line.style.marginBottom = '3px';
+  line.textContent = new Date().toLocaleTimeString() + '  ' + msg;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function showDebugPanel() {
+  const panel = document.getElementById('debug-panel');
+  panel.style.display = 'block';
+  document.getElementById('debug-log').innerHTML = '';
+
+  dbgLog('Starting diagnostics...', '#89b4fa');
+
+  // Step 1 — check URL is saved
+  if (!SCRIPT_URL) {
+    dbgLog('❌ No Script URL saved. Paste your URL in the box above.', '#f38ba8');
+    return;
+  }
+  dbgLog('✓ Script URL found in browser storage', '#a6e3a1');
+  dbgLog('  URL: ' + SCRIPT_URL.substring(0, 60) + '...', '#6c7086');
+
+  // Step 2 — check URL format
+  if (!SCRIPT_URL.startsWith('https://script.google.com/macros/s/')) {
+    dbgLog('❌ URL format wrong. Must start with https://script.google.com/macros/s/', '#f38ba8');
+    return;
+  }
+  if (!SCRIPT_URL.endsWith('/exec')) {
+    dbgLog('❌ URL must end with /exec  — yours ends with: ' + SCRIPT_URL.slice(-10), '#f38ba8');
+    return;
+  }
+  dbgLog('✓ URL format looks correct', '#a6e3a1');
+
+  // Step 3 — try a ping
+  dbgLog('⏳ Pinging Apps Script...', '#f9e2af');
+  try {
+    const pingUrl = SCRIPT_URL + '?_ts=' + Date.now();
+    const res = await fetch(pingUrl, { redirect: 'follow', cache: 'no-store' });
+    dbgLog('✓ Got HTTP ' + res.status + ' response', '#a6e3a1');
+    const text = await res.text();
+    dbgLog('  Raw response: ' + text.substring(0, 120), '#6c7086');
+
+    // Step 4 — check JSON is parseable
+    try {
+      JSON.parse(text);
+      dbgLog('✓ Response is valid JSON', '#a6e3a1');
+    } catch(e) {
+      dbgLog('❌ Response is NOT valid JSON — Apps Script may have an error', '#f38ba8');
+      dbgLog('  Tip: Open Script URL in browser tab to see the error', '#fab387');
+      return;
+    }
+
+    // Step 5 — try loadEmployees
+    dbgLog('⏳ Testing loadEmployees...', '#f9e2af');
+    const empUrl = SCRIPT_URL + '?action=loadEmployees&_ts=' + Date.now();
+    const empRes = await fetch(empUrl, { redirect: 'follow', cache: 'no-store' });
+    const empText = await empRes.text();
+    dbgLog('  loadEmployees response: ' + empText.substring(0, 120), '#6c7086');
+    const empJson = JSON.parse(empText);
+    if (empJson.error) {
+      dbgLog('❌ Apps Script returned error: ' + empJson.error, '#f38ba8');
+      dbgLog('  Tip: Check your SHEET_ID in Apps Script', '#fab387');
+    } else {
+      dbgLog('✓ loadEmployees works! Found ' + (empJson.employees||[]).length + ' employees', '#a6e3a1');
+      dbgLog('🎉 Everything looks good — try tapping Retry above', '#a6e3a1');
+    }
+
+  } catch(err) {
+    dbgLog('❌ Network error: ' + err.message, '#f38ba8');
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      dbgLog('  Possible causes:', '#fab387');
+      dbgLog('  1. You are opening the file as file:// — host it on a web server or GitHub Pages', '#fab387');
+      dbgLog('  2. No internet connection on this device', '#fab387');
+      dbgLog('  3. Apps Script deployment is not set to "Anyone" access', '#fab387');
+    }
+  }
+}
+// ═══════════════════════════════════════════════
+// AUTO-SYNC — polls every 15 seconds
+// ═══════════════════════════════════════════════
+let autoSyncInterval  = null;
+let countdownInterval = null;
+let isSyncing         = false;
+const SYNC_EVERY_SEC  = 15;
+
+function startAutoSync() {
+  if (autoSyncInterval)  clearInterval(autoSyncInterval);
+  if (countdownInterval) clearInterval(countdownInterval);
+
+  let countdown = SYNC_EVERY_SEC;
+
+  // Countdown ticker — updates sync bar label every second
+  countdownInterval = setInterval(() => {
+    const onLogPage = document.getElementById('page-log').classList.contains('active');
+    if (!isSyncing && !onLogPage) {
+      countdown--;
+      if (countdown <= 0) countdown = SYNC_EVERY_SEC;
+      const dot = document.getElementById('sync-dot');
+      if (dot && !dot.classList.contains('error') && !dot.classList.contains('syncing')) {
+        document.getElementById('sync-label').textContent =
+          `Synced ✓  Next sync in ${countdown}s`;
+      }
+    }
+  }, 1000);
+
+  // Actual sync interval
+  autoSyncInterval = setInterval(async () => {
+    const onLogPage = document.getElementById('page-log').classList.contains('active');
+    if (onLogPage || isSyncing) return;
+    countdown = SYNC_EVERY_SEC;
+    await silentSync();
+  }, SYNC_EVERY_SEC * 1000);
+}
+
+// Shared parser — mergeLogRows is the canonical one above.
+// This stub kept for safety in case anything calls it.
+function parseLogRows(rows) { mergeLogRows(rows); }
+
+async function silentSync() {
+  if (!SCRIPT_URL || isSyncing) return;
+  isSyncing = true;
+  setSyncStatus('syncing', 'Syncing...');
+  try {
+    // Single batched call — employees + current month logs together
+    const mk  = monthKey(state.year, state.month);
+    const res = await apiCall({ action:'loadInit', month: mk });
+    if (res?.employees?.length > 0) {
+      EMPLOYEES = res.employees.map(e => ({ name:String(e.name||'').trim(), rate:parseFloat(e.rate)||0 }));
+      LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
+    }
+    const rows = res?.rows || [];
+    LOCAL_CACHE.set(mk, rows);
+    mergeLogRows(rows);
+    setSyncStatus('ok', `Synced ✓  ${new Date().toLocaleTimeString()}`);
+    renderCalendar();
+    if (document.getElementById('page-report').classList.contains('active'))      renderReport();
+    if (document.getElementById('page-report-list').classList.contains('active')) openReportList();
+  } catch (err) {
+    console.error('silentSync error:', err);
+    setSyncStatus('error', 'Sync failed — tap 🔍 to diagnose');
+    document.getElementById('error-detail').textContent = '⚠ ' + (err.message||'');
+    document.getElementById('error-banner').style.display = 'block';
+  }
+  isSyncing = false;
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+document.getElementById('go-manage-btn').addEventListener('click', () => { renderManagePage(); showPage('page-manage'); });
+document.getElementById('back-manage-btn').addEventListener('click', () => { renderCalendar(); showPage('page-cal'); });
+document.getElementById('back-btn').addEventListener('click', () => showPage('page-cal'));
+document.getElementById('go-report-btn').addEventListener('click', openReportList);
+document.getElementById('back-report-list-btn').addEventListener('click', () => showPage('page-cal'));
+document.getElementById('back-report-btn').addEventListener('click', () => showPage('page-report-list'));
+
+document.getElementById('save-btn').addEventListener('click', async () => {
+  const ok = await saveAllToSheets();
+  if (ok) {
+    renderCalendar();
+    const toast = document.getElementById('saved-toast');
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  }
+});
+document.getElementById('prev-month').addEventListener('click', async () => {
+  state.month--; if(state.month<0){state.month=11;state.year--;}
+  await loadMonth(state.year, state.month);
+});
+document.getElementById('next-month').addEventListener('click', async () => {
+  state.month++; if(state.month>11){state.month=0;state.year++;}
+  await loadMonth(state.year, state.month);
+});
+document.getElementById('report-prev-month').addEventListener('click', async () => {
+  reportState.month--; if(reportState.month<0){reportState.month=11;reportState.year--;}
+  await loadMonth(reportState.year, reportState.month);
+  renderReport();
+});
+document.getElementById('report-next-month').addEventListener('click', async () => {
+  reportState.month++; if(reportState.month>11){reportState.month=0;reportState.year++;}
+  await loadMonth(reportState.year, reportState.month);
+  renderReport();
+});
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+(async function init() {
+  if (SCRIPT_URL) {
+    await loadAllFromSheets();
+    startAutoSync(); // start polling after first load
+  } else {
+    document.getElementById('setup-banner').style.display = 'block';
+    showLoading(false);
+    setSyncStatus('error', 'Not connected — paste your Script URL above');
+    renderCalendar();
+  }
+})();
+
+// Tap the sync bar to manually force a refresh
+document.getElementById('sync-bar-btn').addEventListener('click', async () => {
+  if (!SCRIPT_URL) return;
+  await silentSync();
+});
+</script>
+</body>
+</html>
