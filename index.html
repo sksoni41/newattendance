@@ -973,8 +973,29 @@ function clearDirty()           { dirtyKeys.clear(); }
 // ═══════════════════════════════════════════════
 // ROW PARSING
 // ═══════════════════════════════════════════════
+
+// replaceMonthLogs — called after every sync/load.
+// CLEARS the in-memory state for the given month first,
+// then fills it from the fresh sheet rows.
+// This prevents stale "ghost" entries from persisting on
+// one device after another device deleted them.
+function replaceMonthLogs(mk, rows) {
+  // Wipe every date key that belongs to this month
+  Object.keys(state.logs).forEach(dk => {
+    if (dk.startsWith(mk)) delete state.logs[dk];
+  });
+  // Re-populate from the authoritative sheet data
+  if (rows && rows.length) _applyRows(rows);
+}
+
+// mergeLogRows — used ONLY for initial cold-cache paint
+// (before network response arrives).  Does NOT wipe existing data.
 function mergeLogRows(rows) {
   if (!rows || !rows.length) return;
+  _applyRows(rows);
+}
+
+function _applyRows(rows) {
   rows.forEach(row => {
     const date    = String(row[0]||'').trim();
     const empName = String(row[1]||'').trim();
@@ -1031,7 +1052,7 @@ async function loadAllFromSheets() {
       LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
     }
     LOCAL_CACHE.set(mk, rows);
-    mergeLogRows(rows);
+    replaceMonthLogs(mk, rows);   // ← authoritative replace, not additive merge
     setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
     document.getElementById('error-banner').style.display = 'none';
 
@@ -1075,7 +1096,7 @@ async function _fetchFresh(mk) {
       LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
     }
     LOCAL_CACHE.set(mk, rows);
-    mergeLogRows(rows);
+    replaceMonthLogs(mk, rows);   // ← authoritative replace
     setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
     document.getElementById('error-banner').style.display = 'none';
   } catch(err) {
@@ -1099,7 +1120,7 @@ async function _refreshInBackground(mk) {
     }
     const rows = res.rows || [];
     LOCAL_CACHE.set(mk, rows);
-    mergeLogRows(rows);
+    replaceMonthLogs(mk, rows);   // ← authoritative replace
     setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
     renderCalendar();
     if (document.getElementById('page-report').classList.contains('active'))      renderReport();
@@ -1125,7 +1146,7 @@ async function _refreshMonthOnly(y, m, mk) {
     const logRes = await apiCall({ action:'loadLogs', month: mk });
     const rows   = logRes?.rows || [];
     LOCAL_CACHE.set(mk, rows);
-    mergeLogRows(rows);
+    replaceMonthLogs(mk, rows);   // ← authoritative replace
     renderCalendar();
     if (document.getElementById('page-report').classList.contains('active')) renderReport();
   } catch(e) { /* silent */ }
@@ -1871,11 +1892,16 @@ async function silentSync() {
     }
     const rows = res?.rows || [];
     LOCAL_CACHE.set(mk, rows);
-    mergeLogRows(rows);
+    // Only replace in-memory state if there are no unsaved dirty edits for this month
+    // — prevents overwriting work-in-progress on the log entry page
+    if (dirtyKeys.size === 0) {
+      replaceMonthLogs(mk, rows);  // ← authoritative replace, safe when no dirty edits
+    }
     setSyncStatus('ok', `Synced ✓  ${new Date().toLocaleTimeString()}`);
     renderCalendar();
     if (document.getElementById('page-report').classList.contains('active'))      renderReport();
     if (document.getElementById('page-report-list').classList.contains('active')) openReportList();
+    if (document.getElementById('page-chart').classList.contains('active'))       renderChart();
   } catch (err) {
     console.error('silentSync error:', err);
     setSyncStatus('error', 'Sync failed — tap 🔍 to diagnose');
@@ -2191,6 +2217,23 @@ document.getElementById('report-next-month').addEventListener('click', async () 
 document.getElementById('sync-bar-btn').addEventListener('click', async () => {
   if (!SCRIPT_URL) return;
   await silentSync();
+});
+
+// ── Sync immediately when the user switches back to this tab/app ──
+// This is the key fix for multi-device desync: whenever either device
+// brings the app to the foreground, it pulls the latest data from Sheets
+// so it's never stale vs the other device.
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && SCRIPT_URL && !isSyncing) {
+    // Only sync if we've been hidden for at least 5 seconds
+    // (avoids spurious syncs on quick tab switches)
+    const now = Date.now();
+    if (!window._lastHiddenAt || (now - window._lastHiddenAt) > 5000) {
+      await silentSync();
+    }
+  } else if (document.visibilityState === 'hidden') {
+    window._lastHiddenAt = Date.now();
+  }
 });
 </script>
 </body>
