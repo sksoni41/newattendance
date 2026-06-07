@@ -450,6 +450,7 @@
     border-top: 2px solid #cce0f5;
     min-width: 90px;
     white-space: nowrap;
+    text-align: center;
   }
   .chart-table tfoot tr td.chart-cell {
     background: #f0f7ff;
@@ -1519,9 +1520,7 @@ function renderChart() {
     const td = document.createElement('td');
     td.className = 'chart-cell';
     const earning = Math.round(empTotalHours[ei] * emp.rate);
-    td.textContent = earning >= 1000
-      ? '₹' + (earning / 1000).toFixed(1) + 'k'
-      : '₹' + earning;
+    td.textContent = '₹' + earning.toLocaleString('en-IN');
     trEarn.appendChild(td);
   });
   tfoot.appendChild(trEarn);
