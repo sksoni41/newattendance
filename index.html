@@ -1284,15 +1284,23 @@ function renderStats() {
         if (state.logs[dk][emp.name].leave === 'leave') leaveDays++;
       }
     }
-    const earning = totalHours * emp.rate;
-    const row = document.createElement('div');
-    row.className = 'emp-stat';
-    row.innerHTML = `
+    const earning  = totalHours * emp.rate;
+    const mk       = `${state.year}-${String(state.month+1).padStart(2,'0')}`;
+    const advances = (ADVANCES[emp.name] || [])
+      .filter(r => r.date && r.date.startsWith(mk))
+      .reduce((s, r) => s + r.amount, 0);
+    const net      = Math.round(earning) - Math.round(advances);
+    const row      = document.createElement('div');
+    row.className  = 'emp-stat';
+    row.innerHTML  = `
       <div>
         <div class="emp-name-s">${emp.name.split(' ')[0]}</div>
-        <div class="emp-meta">${totalHours.toFixed(1)} hrs · ${leaveDays} leave day${leaveDays !== 1 ? 's' : ''}</div>
+        <div class="emp-meta">${totalHours.toFixed(1)} hrs · ${leaveDays} leave${advances > 0 ? ` · -₹${Math.round(advances).toLocaleString('en-IN')} adv` : ''}</div>
       </div>
-      <div class="emp-earning">₹${Math.round(earning).toLocaleString('en-IN')}</div>`;
+      <div style="text-align:right">
+        <div class="emp-earning" style="color:${advances > 0 ? '#E24B4A' : '#185FA5'}">₹${net.toLocaleString('en-IN')}</div>
+        ${advances > 0 ? `<div style="font-size:10px;color:#aaa;text-decoration:line-through">₹${Math.round(earning).toLocaleString('en-IN')}</div>` : ''}
+      </div>`;
     list.appendChild(row);
   });
 }
@@ -1878,6 +1886,14 @@ function startAutoSync() {
 // This stub kept for safety in case anything calls it.
 function parseLogRows(rows) { mergeLogRows(rows); }
 
+// Replace only the current month's logs in state — safe authoritative overwrite
+function replaceMonthLogs(mk, rows) {
+  // Remove existing entries for this month
+  Object.keys(state.logs).forEach(dk => { if (dk.startsWith(mk)) delete state.logs[dk]; });
+  // Re-merge from sheet
+  mergeLogRows(rows);
+}
+
 async function silentSync() {
   if (!SCRIPT_URL || isSyncing) return;
   isSyncing = true;
@@ -1927,44 +1943,81 @@ function advCacheKey(empName) { return 'adv_' + empName.replace(/\s+/g, '_'); }
 
 // ── Load advances from Sheets ──
 async function loadAdvances(empName) {
+  if (!empName) return;
   const cacheKey = advCacheKey(empName);
-  const cached   = LOCAL_CACHE.get(cacheKey);
-  if (cached) { ADVANCES[empName] = cached; }
 
-  if (!SCRIPT_URL) return;
+  // Always fetch fresh from sheet — don't rely on cache for advances
+  // because entries added from other devices must always show up
+  if (!SCRIPT_URL) {
+    // Offline — use cache only
+    const cached = LOCAL_CACHE.get(cacheKey);
+    if (cached) ADVANCES[empName] = cached;
+    return;
+  }
+
   try {
-    const res = await apiCall({ action: 'loadAdvances', employee: empName });
-    const rows = res?.advances || [];
+    // Build URL manually to debug easily
+    const url = SCRIPT_URL + '?action=loadAdvances&employee='
+      + encodeURIComponent(empName) + '&_ts=' + Date.now();
+
+    console.log('loadAdvances →', empName, url.substring(0, 100));
+
+    const res  = await fetch(url, { redirect:'follow', cache:'no-store' });
+    const text = await res.text();
+    console.log('loadAdvances ←', empName, text.substring(0, 200));
+
+    const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
+    const json  = JSON.parse(clean);
+
+    if (json.error) {
+      console.error('loadAdvances error from sheet:', json.error);
+      return;
+    }
+
+    const rows = json.advances || [];
+    // Sheet returns [id, date, amount, note] after stripping Employee col
     ADVANCES[empName] = rows.map(r => ({
       id:     String(r[0] || Date.now()),
       date:   String(r[1] || ''),
       amount: parseFloat(r[2]) || 0,
       note:   String(r[3] || '')
     }));
+
+    console.log('loadAdvances parsed', empName, ADVANCES[empName]);
     LOCAL_CACHE.set(cacheKey, ADVANCES[empName]);
+
   } catch(e) {
-    console.warn('loadAdvances error:', e.message);
+    console.error('loadAdvances fetch error for', empName, ':', e.message);
+    // Fall back to cache if fetch fails
+    const cached = LOCAL_CACHE.get(cacheKey);
+    if (cached) ADVANCES[empName] = cached;
   }
 }
 
-// ── Save a new advance to Sheets ──
+// ── Save advances to Sheets (POST — handles large data) ──
+async function saveAdvancesToSheet(empName) {
+  if (!SCRIPT_URL) return true;
+  try {
+    const records = (ADVANCES[empName] || []).map(r => [r.id, r.date, r.amount, r.note]);
+    // Force POST by using action starting with 'save'
+    await apiCall({
+      action:   'saveAdvance',
+      employee: empName,
+      data:     JSON.stringify(records)
+    });
+    return true;
+  } catch(e) {
+    console.warn('saveAdvancesToSheet error:', e.message);
+    return false;
+  }
+}
+
+// ── Add a new advance record ──
 async function saveAdvance(empName, record) {
   if (!ADVANCES[empName]) ADVANCES[empName] = [];
   ADVANCES[empName].push(record);
   LOCAL_CACHE.set(advCacheKey(empName), ADVANCES[empName]);
-
-  if (!SCRIPT_URL) return true;
-  try {
-    await apiCall({
-      action:   'saveAdvance',
-      employee: empName,
-      data:     JSON.stringify(ADVANCES[empName].map(r => [r.id, r.date, r.amount, r.note]))
-    });
-    return true;
-  } catch(e) {
-    console.warn('saveAdvance error:', e.message);
-    return false;
-  }
+  return await saveAdvancesToSheet(empName);
 }
 
 // ── Delete an advance entry ──
@@ -1972,20 +2025,23 @@ async function deleteAdvance(empName, id) {
   if (!ADVANCES[empName]) return;
   ADVANCES[empName] = ADVANCES[empName].filter(r => r.id !== id);
   LOCAL_CACHE.set(advCacheKey(empName), ADVANCES[empName]);
-
-  if (!SCRIPT_URL) return;
-  try {
-    await apiCall({
-      action:   'saveAdvance',
-      employee: empName,
-      data:     JSON.stringify(ADVANCES[empName].map(r => [r.id, r.date, r.amount, r.note]))
-    });
-  } catch(e) { console.warn('deleteAdvance error:', e.message); }
+  await saveAdvancesToSheet(empName);
 }
 
 // ── Open advance employee selector ──
-function openAdvanceList() {
+async function openAdvanceList() {
   const container = document.getElementById('adv-select-list');
+  container.innerHTML = '<div style="text-align:center;padding:24px;color:#888;font-size:13px">Loading advances...</div>';
+  showPage('page-advance-list');
+
+  // Load all employees in parallel
+  try {
+    await Promise.all(EMPLOYEES.map(emp => loadAdvances(emp.name)));
+  } catch(e) {
+    console.error('openAdvanceList error:', e);
+  }
+
+  // Render cards after loading
   container.innerHTML = '';
   EMPLOYEES.forEach((emp, idx) => {
     const ini      = initials(emp.name);
@@ -2112,9 +2168,10 @@ async function confirmDeleteAdvance(empName, id) {
   showLoading(true, 'Deleting...');
   await deleteAdvance(empName, id);
   showLoading(false);
-  renderAdvanceDetail();
-  openAdvanceList(); // refresh list counts
-  showPage('page-advance');
+  renderAdvanceDetail(); // re-render current page
+  // also refresh the list counts in background
+  openAdvanceList();
+  showPage('page-advance'); // stay on detail page
 }
 
 // ── Save new advance from form ──
@@ -2137,10 +2194,11 @@ document.getElementById('btn-adv-confirm').addEventListener('click', async () =>
     document.getElementById('adv-add-form').classList.remove('open');
     document.getElementById('adv-amount-input').value = '';
     document.getElementById('adv-note-input').value   = '';
+    renderAdvanceDetail();
+    showPage('page-advance');
+  } else {
+    alert('Failed to save advance. Please try again.');
   }
-  renderAdvanceDetail();
-  openAdvanceList();
-  showPage('page-advance');
 });
 
 // ── Toggle add form ──
@@ -2173,9 +2231,15 @@ document.getElementById('back-report-list-btn').addEventListener('click', () => 
 document.getElementById('back-report-btn').addEventListener('click', () => showPage('page-report-list'));
 document.getElementById('go-chart-btn').addEventListener('click', openChart);
 document.getElementById('back-chart-btn').addEventListener('click', () => showPage('page-cal'));
-document.getElementById('go-advance-list-btn').addEventListener('click', () => { advanceState.month = state.month; advanceState.year = state.year; openAdvanceList(); });
+document.getElementById('go-advance-list-btn').addEventListener('click', async () => {
+  advanceState.month = state.month;
+  advanceState.year  = state.year;
+  await openAdvanceList();
+});
 document.getElementById('back-advance-list-btn').addEventListener('click', () => showPage('page-cal'));
-document.getElementById('back-advance-btn').addEventListener('click', () => openAdvanceList());
+document.getElementById('back-advance-btn').addEventListener('click', async () => {
+  await openAdvanceList();
+});
 
 document.getElementById('save-btn').addEventListener('click', async () => {
   const ok = await saveAllToSheets();
