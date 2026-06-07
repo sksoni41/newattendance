@@ -1914,6 +1914,8 @@ async function silentSync() {
       replaceMonthLogs(mk, rows);  // ← authoritative replace, safe when no dirty edits
     }
     setSyncStatus('ok', `Synced ✓  ${new Date().toLocaleTimeString()}`);
+    // Also refresh advances in background so stats sidebar stays accurate
+    _loadAllAdvancesInBackground();
     renderCalendar();
     if (document.getElementById('page-report').classList.contains('active'))      renderReport();
     if (document.getElementById('page-report-list').classList.contains('active')) openReportList();
@@ -2294,7 +2296,24 @@ document.getElementById('report-next-month').addEventListener('click', async () 
 (async function init() {
   await loadAllFromSheets();
   startAutoSync();
+
+  // Load advances for all employees in background right after startup
+  // so the stats sidebar shows net salary (after deductions) immediately
+  // without requiring the user to visit the Advances page first
+  _loadAllAdvancesInBackground();
 })();
+
+// Silently loads advances for every employee in parallel
+// Re-renders the stats sidebar when done
+async function _loadAllAdvancesInBackground() {
+  try {
+    await Promise.all(EMPLOYEES.map(emp => loadAdvances(emp.name)));
+    // Re-render stats so net salaries show immediately
+    renderCalendar();
+  } catch(e) {
+    console.warn('Background advances load error:', e.message);
+  }
+}
 
 // Tap the sync bar to manually force a refresh
 document.getElementById('sync-bar-btn').addEventListener('click', async () => {
