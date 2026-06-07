@@ -337,6 +337,141 @@
 
   /* BANNERS */
   .error-banner { margin:0 12px 12px; padding:10px 14px; background:#FCEBEB; border-radius:10px; border:1px solid #F09595; font-size:12px; color:#A32D2D; display:none; }
+
+  /* ── CHART PAGE ── */
+  .chart-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f0f7ff;
+    border-bottom: 1px solid #cce0f5;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chart-month-nav { display:flex; align-items:center; gap:8px; }
+  .chart-month-nav button { background:none; border:1px solid #ccc; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:16px; color:#333; }
+  #chart-month-label { font-size:13px; font-weight:600; color:#185FA5; min-width:100px; text-align:center; }
+  .chart-legend-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .chart-legend-item { font-size:11px; color:#666; display:flex; align-items:center; gap:4px; }
+  .clbadge { display:inline-block; width:12px; height:12px; border-radius:3px; }
+  .clbadge-hours  { background:#185FA5; }
+  .clbadge-leave  { background:#E24B4A; }
+  .clbadge-absent { background:#e8e8e8; }
+
+  .chart-table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 220px);
+    margin: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chart-table {
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 100%;
+    white-space: nowrap;
+  }
+
+  /* Sticky header row */
+  .chart-table thead tr th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #185FA5;
+    color: #fff;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 9px 10px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.15);
+  }
+  .chart-table thead tr th:first-child {
+    text-align: left;
+    min-width: 90px;
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background: #185FA5;
+    border-right: 2px solid rgba(255,255,255,0.3);
+  }
+
+  /* Sticky first column (date) */
+  .chart-table tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+    font-weight: 600;
+    font-size: 11px;
+    color: #555;
+    padding: 7px 10px;
+    border-right: 2px solid #e0e0e0;
+    min-width: 90px;
+  }
+  .chart-table tbody tr:nth-child(even) td:first-child { background: #f8f9fa; }
+  .chart-table tbody tr.chart-weekend td:first-child    { background: #fffbf0; }
+
+  .chart-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+  .chart-table tbody tr:last-child { border-bottom: none; }
+  .chart-table tbody tr:nth-child(even) { background: #f8f9fa; }
+  .chart-table tbody tr.chart-weekend  { background: #fffbf0; }
+  .chart-table tbody tr.chart-today td:first-child { color: #185FA5; }
+  .chart-table tbody tr.chart-today    { background: #e6f1fb !important; }
+
+  /* Data cells */
+  .chart-table tbody td.chart-cell {
+    text-align: center;
+    padding: 6px 8px;
+    border-right: 1px solid #f0f0f0;
+    min-width: 68px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .chart-cell.cell-hours  { color: #185FA5; }
+  .chart-cell.cell-leave  { background: #fff5f5; color: #E24B4A; font-weight:600; font-size:10px; }
+  .chart-cell.cell-absent { color: #ccc; }
+
+  /* Totals footer row */
+  .chart-totals-wrap {
+    margin: 0 12px 16px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .chart-totals-wrap .chart-table tbody td:first-child {
+    background: #f0f7ff;
+    color: #185FA5;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .chart-totals-wrap .chart-table tbody td.chart-cell {
+    background: #f0f7ff;
+    color: #185FA5;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  .chart-totals-wrap .chart-table tbody tr.totals-earning td.chart-cell {
+    background: #eaf3de;
+    color: #3B6D11;
+  }
+  .chart-totals-wrap .chart-table tbody tr.totals-earning td:first-child {
+    background: #eaf3de;
+    color: #3B6D11;
+  }
+
+  @media (min-width: 600px) {
+    .chart-table-wrap { margin: 14px 28px; }
+    .chart-totals-wrap { margin: 0 28px 20px; }
+    .chart-controls { padding: 12px 28px; }
+    .chart-table thead tr th { font-size: 12px; padding: 10px 14px; }
+    .chart-table tbody td.chart-cell { font-size: 13px; padding: 8px 12px; min-width: 80px; }
+  }
 </style>
 </head>
 <body>
@@ -1237,6 +1372,170 @@ function countWorkdays(year, month) {
 }
 
 // ═══════════════════════════════════════════════
+// CHART — All employees × All dates (hours grid)
+// ═══════════════════════════════════════════════
+let chartState = { month: new Date().getMonth(), year: new Date().getFullYear() };
+
+async function openChart() {
+  chartState.month = state.month;
+  chartState.year  = state.year;
+  await loadMonth(chartState.year, chartState.month);
+  renderChart();
+  showPage('page-chart');
+}
+
+function renderChart() {
+  const { month, year } = chartState;
+  document.getElementById('chart-month-label').textContent =
+    `${MONTHS[month]} ${year}`;
+
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  const today     = new Date();
+  const isThisMonth = today.getMonth() === month && today.getFullYear() === year;
+
+  // ── HEADER ROW: Date | Emp1 | Emp2 | … ──
+  const thead = document.getElementById('chart-thead');
+  thead.innerHTML = '';
+  const hrow = document.createElement('tr');
+
+  const thDate = document.createElement('th');
+  thDate.textContent = 'Date';
+  hrow.appendChild(thDate);
+
+  EMPLOYEES.forEach(emp => {
+    const th = document.createElement('th');
+    // Show first name only to save space; full name on hover
+    th.textContent = emp.name.split(' ')[0];
+    th.title       = emp.name;
+    hrow.appendChild(th);
+  });
+  thead.appendChild(hrow);
+
+  // ── BODY ROWS: one per calendar day ──
+  const tbody = document.getElementById('chart-tbody');
+  tbody.innerHTML = '';
+
+  // Accumulators for totals
+  const empTotalHours   = EMPLOYEES.map(() => 0);
+  const empLeaveDays    = EMPLOYEES.map(() => 0);
+
+  for (let d = 1; d <= totalDays; d++) {
+    const dk  = dateKey(year, month, d);
+    const dt  = new Date(year, month, d);
+    const dow = dt.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const isToday   = isThisMonth && d === today.getDate();
+
+    const tr = document.createElement('tr');
+    if (isWeekend) tr.classList.add('chart-weekend');
+    if (isToday)   tr.classList.add('chart-today');
+
+    // Date cell
+    const tdDate = document.createElement('td');
+    const ddStr  = String(d).padStart(2, '0');
+    const dayAbbr = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dow];
+    tdDate.innerHTML = `${ddStr} <span style="font-weight:400;color:#aaa;font-size:10px">${dayAbbr}</span>` +
+      (isWeekend ? ` <span style="color:#EF9F27;font-size:9px">WE</span>` : '') +
+      (isToday   ? ` <span style="color:#1D9E75;font-size:9px">●</span>` : '');
+    tr.appendChild(tdDate);
+
+    // One cell per employee
+    EMPLOYEES.forEach((emp, ei) => {
+      const log     = state.logs[dk] && state.logs[dk][emp.name];
+      const h       = getHours(log);
+      const isLeave = log && log.leave === 'leave';
+
+      if (isLeave) empLeaveDays[ei]++;
+      if (h > 0)   empTotalHours[ei] += h;
+
+      const td = document.createElement('td');
+      td.className = 'chart-cell';
+
+      if (isLeave) {
+        td.classList.add('cell-leave');
+        td.textContent = 'Leave';
+      } else if (h > 0) {
+        td.classList.add('cell-hours');
+        td.textContent = h % 1 === 0 ? h.toFixed(0) : h.toFixed(1);
+      } else {
+        td.classList.add('cell-absent');
+        td.textContent = '—';
+      }
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  }
+
+  // ── TOTALS TABLE ──
+  const totBody = document.getElementById('chart-totals-tbody');
+  totBody.innerHTML = '';
+
+  // Row 1 — Total Hours
+  const trHours = document.createElement('tr');
+  const tdHoursLabel = document.createElement('td');
+  tdHoursLabel.textContent = 'Total Hrs';
+  trHours.appendChild(tdHoursLabel);
+  EMPLOYEES.forEach((_, ei) => {
+    const td = document.createElement('td');
+    td.className = 'chart-cell';
+    const h = empTotalHours[ei];
+    td.textContent = h % 1 === 0 ? h.toFixed(0) + ' h' : h.toFixed(1) + ' h';
+    trHours.appendChild(td);
+  });
+  totBody.appendChild(trHours);
+
+  // Row 2 — Leave Days
+  const trLeave = document.createElement('tr');
+  const tdLeaveLabel = document.createElement('td');
+  tdLeaveLabel.textContent = 'Leave Days';
+  trLeave.appendChild(tdLeaveLabel);
+  EMPLOYEES.forEach((_, ei) => {
+    const td = document.createElement('td');
+    td.className = 'chart-cell';
+    td.textContent = empLeaveDays[ei] > 0 ? empLeaveDays[ei] + ' d' : '—';
+    if (empLeaveDays[ei] > 0) td.style.color = '#E24B4A';
+    trLeave.appendChild(td);
+  });
+  totBody.appendChild(trLeave);
+
+  // Row 3 — Earnings
+  const trEarn = document.createElement('tr');
+  trEarn.className = 'totals-earning';
+  const tdEarnLabel = document.createElement('td');
+  tdEarnLabel.textContent = 'Earnings';
+  trEarn.appendChild(tdEarnLabel);
+  EMPLOYEES.forEach((emp, ei) => {
+    const td = document.createElement('td');
+    td.className = 'chart-cell';
+    const earning = Math.round(empTotalHours[ei] * emp.rate);
+    td.textContent = earning >= 1000
+      ? '₹' + (earning / 1000).toFixed(1) + 'k'
+      : '₹' + earning;
+    trEarn.appendChild(td);
+  });
+  totBody.appendChild(trEarn);
+
+  // Sync the totals table column widths to match the main table
+  // (done by making both tables the same DOM structure — they scroll independently
+  //  but the totals are compact so overflow is fine)
+}
+
+// Chart month navigation
+document.getElementById('chart-prev-month').addEventListener('click', async () => {
+  chartState.month--;
+  if (chartState.month < 0) { chartState.month = 11; chartState.year--; }
+  await loadMonth(chartState.year, chartState.month);
+  renderChart();
+});
+document.getElementById('chart-next-month').addEventListener('click', async () => {
+  chartState.month++;
+  if (chartState.month > 11) { chartState.month = 0; chartState.year++; }
+  await loadMonth(chartState.year, chartState.month);
+  renderChart();
+});
+
+// ═══════════════════════════════════════════════
 // DEBUG & URL HELPERS
 // ═══════════════════════════════════════════════
 function dbgLog(msg, color) {
@@ -1392,6 +1691,8 @@ document.getElementById('back-btn').addEventListener('click', () => showPage('pa
 document.getElementById('go-report-btn').addEventListener('click', openReportList);
 document.getElementById('back-report-list-btn').addEventListener('click', () => showPage('page-cal'));
 document.getElementById('back-report-btn').addEventListener('click', () => showPage('page-report-list'));
+document.getElementById('go-chart-btn').addEventListener('click', openChart);
+document.getElementById('back-chart-btn').addEventListener('click', () => showPage('page-cal'));
 
 document.getElementById('save-btn').addEventListener('click', async () => {
   const ok = await saveAllToSheets();
