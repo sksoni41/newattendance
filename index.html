@@ -278,10 +278,6 @@
   .emp-select-arrow { font-size:18px; color:#ccc; }
 
   /* BANNERS */
-  .setup-banner { margin:12px; padding:12px 14px; background:#FAEEDA; border-radius:10px; border:1px solid #EF9F27; font-size:12px; color:#633806; line-height:1.5; }
-  .setup-banner strong { display:block; margin-bottom:4px; font-size:13px; }
-  .setup-banner input { width:100%; margin-top:6px; padding:7px 10px; font-size:12px; border:1px solid #BA7517; border-radius:7px; background:#fff; color:#333; }
-  .setup-banner button { margin-top:6px; width:100%; padding:8px; background:#185FA5; color:#fff; border:none; border-radius:7px; font-size:12px; font-weight:500; cursor:pointer; }
   .error-banner { margin:0 12px 12px; padding:10px 14px; background:#FCEBEB; border-radius:10px; border:1px solid #F09595; font-size:12px; color:#A32D2D; display:none; }
 </style>
 </head>
@@ -299,17 +295,10 @@
       <span id="sync-label">Connecting to Google Sheets...</span>
       <i class="ti ti-refresh" style="margin-left:auto;font-size:14px;opacity:0.6"></i>
     </div>
-    <div class="setup-banner" id="setup-banner" style="display:none">
-      <strong>⚠ Connect to Google Sheets to save data</strong>
-      Paste your Google Apps Script Web App URL below and tap Save.
-      <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/...">
-      <button onclick="saveScriptUrl()">Save &amp; Connect</button>
-    </div>
     <div class="error-banner" id="error-banner" style="display:none">
       <div id="error-detail">⚠ Could not reach Google Sheets.</div>
       <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
         <a href="#" onclick="showDebugPanel();return false;" style="color:#A32D2D;font-weight:600;font-size:11px">🔍 Run Diagnostics</a>
-        <a href="#" onclick="resetUrl();return false;"       style="color:#A32D2D;font-weight:600;font-size:11px">✏️ Change URL</a>
         <a href="#" onclick="silentSync();return false;"     style="color:#A32D2D;font-weight:600;font-size:11px">🔄 Retry</a>
       </div>
     </div>
@@ -447,7 +436,7 @@
 // ═══════════════════════════════════════════════
 // CONFIGURATION
 // ═══════════════════════════════════════════════
-let SCRIPT_URL = localStorage.getItem('attendance_script_url') || '';
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmyb1KYK86Y5kJ_Xze8uJuO-hEqDT0HR8hz931o0RCJ-vRK1gRfIbz_fkwtxOSd_Ps/exec';
 
 let EMPLOYEES = [
   { name: 'Aarav Singh',  rate: 150 },
@@ -570,13 +559,6 @@ function mergeLogRows(rows) {
 // fetch fresh data in background
 // ═══════════════════════════════════════════════
 async function loadAllFromSheets() {
-  if (!SCRIPT_URL) {
-    document.getElementById('setup-banner').style.display = 'block';
-    showLoading(false);
-    setSyncStatus('error', 'Not connected — paste your Script URL above');
-    renderCalendar();
-    return;
-  }
   document.getElementById('error-banner').style.display = 'none';
 
   // Step 1 — show any cached data instantly
@@ -765,15 +747,6 @@ async function saveAllToSheets() {
     showLoading(false);
     return false;
   }
-}
-
-function saveScriptUrl() {
-  const url = document.getElementById('script-url-input').value.trim();
-  if (!url.startsWith('https://script.google.com')) { alert('Please paste a valid Google Apps Script URL.'); return; }
-  SCRIPT_URL = url;
-  localStorage.setItem('attendance_script_url', url);
-  document.getElementById('setup-banner').style.display = 'none';
-  loadAllFromSheets();
 }
 
 // ═══════════════════════════════════════════════
@@ -1174,11 +1147,6 @@ function countWorkdays(year, month) {
 // ═══════════════════════════════════════════════
 // DEBUG & URL HELPERS
 // ═══════════════════════════════════════════════
-function resetUrl() {
-  document.getElementById('script-url-input').value = SCRIPT_URL;
-  document.getElementById('setup-banner').style.display = 'block';
-}
-
 function dbgLog(msg, color) {
   const el = document.getElementById('debug-log');
   if (!el) return;
@@ -1365,15 +1333,8 @@ document.getElementById('report-next-month').addEventListener('click', async () 
 // INIT
 // ═══════════════════════════════════════════════
 (async function init() {
-  if (SCRIPT_URL) {
-    await loadAllFromSheets();
-    startAutoSync(); // start polling after first load
-  } else {
-    document.getElementById('setup-banner').style.display = 'block';
-    showLoading(false);
-    setSyncStatus('error', 'Not connected — paste your Script URL above');
-    renderCalendar();
-  }
+  await loadAllFromSheets();
+  startAutoSync();
 })();
 
 // Tap the sync bar to manually force a refresh
