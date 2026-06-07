@@ -487,28 +487,38 @@ async function apiCall(params) {
   if (!SCRIPT_URL) throw new Error('No script URL');
   params._ts = Date.now();
   const isSave = params.action && params.action.startsWith('save');
-  return isSave ? await postCall(params) : await getCall(params);
-}
 
-async function getCall(params) {
-  const url  = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  const res  = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store' });
-  const text = await res.text();
-  const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
-  try { return JSON.parse(clean); }
-  catch(e) { console.error('Bad response:', text.substring(0,300)); throw new Error('Invalid response'); }
-}
+  // 20 second timeout — prevents infinite loading spinner
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20000);
 
-async function postCall(params) {
-  const body = new URLSearchParams(params).toString();
-  const res  = await fetch(SCRIPT_URL, {
-    method:'POST', redirect:'follow', cache:'no-store',
-    headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body
-  });
-  const text  = await res.text();
-  const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
-  try { return JSON.parse(clean); }
-  catch(e) { console.error('Bad POST response:', text.substring(0,300)); throw new Error('Invalid response'); }
+  try {
+    if (isSave) {
+      const body = new URLSearchParams(params).toString();
+      const res  = await fetch(SCRIPT_URL, {
+        method:'POST', redirect:'follow', cache:'no-store',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+        body, signal: controller.signal
+      });
+      clearTimeout(timer);
+      const text  = await res.text();
+      const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
+      try { return JSON.parse(clean); }
+      catch(e) { console.error('Bad POST response:', text.substring(0,300)); throw new Error('Invalid response from server'); }
+    } else {
+      const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+      const res  = await fetch(url, { method:'GET', redirect:'follow', cache:'no-store', signal: controller.signal });
+      clearTimeout(timer);
+      const text  = await res.text();
+      const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
+      try { return JSON.parse(clean); }
+      catch(e) { console.error('Bad GET response:', text.substring(0,300)); throw new Error('Invalid response from server'); }
+    }
+  } catch(err) {
+    clearTimeout(timer);
+    if (err.name === 'AbortError') throw new Error('Request timed out — Apps Script took too long');
+    throw err;
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -584,28 +594,48 @@ async function loadAllFromSheets() {
   showLoading(true, `Loading ${MONTHS[state.month]} ${state.year}...`);
   setSyncStatus('syncing', 'Loading...');
   await _fetchFresh(mk);
-  showLoading(false);
+  // loader is hidden inside _fetchFresh's finally block
 }
 
-// Optimization 1: single batched call for employees + logs
+// Single batched call — falls back to two separate calls if loadInit fails
 async function _fetchFresh(mk) {
   try {
-    // Single call that returns both employees and logs
-    const res = await apiCall({ action:'loadInit', month: mk });
-    if (res.employees && res.employees.length > 0) {
-      EMPLOYEES = res.employees.map(e => ({ name:String(e.name||'').trim(), rate:parseFloat(e.rate)||0 }));
+    let employees = null;
+    let rows      = [];
+
+    // Try batched loadInit first
+    try {
+      const res = await apiCall({ action:'loadInit', month: mk });
+      if (res.error) throw new Error(res.error);
+      employees = res.employees || [];
+      rows      = res.rows || [];
+    } catch(initErr) {
+      console.warn('loadInit failed, falling back to separate calls:', initErr.message);
+      // Fallback — load employees and logs separately
+      const [empRes, logRes] = await Promise.all([
+        apiCall({ action:'loadEmployees' }),
+        apiCall({ action:'loadLogs', month: mk })
+      ]);
+      employees = empRes?.employees || [];
+      rows      = logRes?.rows || [];
+    }
+
+    if (employees && employees.length > 0) {
+      EMPLOYEES = employees.map(e => ({ name:String(e.name||'').trim(), rate:parseFloat(e.rate)||0 }));
       LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
     }
-    const rows = res.rows || [];
     LOCAL_CACHE.set(mk, rows);
     mergeLogRows(rows);
     setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
-    renderCalendar();
+    document.getElementById('error-banner').style.display = 'none';
   } catch(err) {
     console.error('_fetchFresh error:', err);
-    setSyncStatus('error', 'Failed: ' + (err.message||'').substring(0,40));
+    setSyncStatus('error', 'Failed: ' + (err.message||'').substring(0,50));
     document.getElementById('error-detail').textContent = '⚠ ' + (err.message||'Unknown error');
     document.getElementById('error-banner').style.display = 'block';
+  } finally {
+    // Always hide loader — prevents infinite loading screen
+    showLoading(false);
     renderCalendar();
   }
 }
