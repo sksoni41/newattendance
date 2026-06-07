@@ -130,6 +130,64 @@
   .sync-dot.error { background: #E24B4A; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
+  /* TOP BAR */
+  .topbar {
+    background: #185FA5;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .topbar h1 {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    flex: 1;
+    letter-spacing: 0.2px;
+  }
+  .topbar .app-icon {
+    color: #fff;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .back-btn {
+    background: rgba(255,255,255,0.22);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .back-btn:hover  { background: rgba(255,255,255,0.35); }
+  .back-btn:active { background: rgba(255,255,255,0.15); }
+  .manage-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #185FA5;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .manage-btn:hover  { opacity: 0.85; }
+  .manage-btn:active { opacity: 0.7; }
+
   /* LOADING OVERLAY */
   .loading-overlay { display:none; position:absolute; inset:0; background:rgba(255,255,255,0.92); z-index:20; flex-direction:column; align-items:center; justify-content:center; gap:12px; border-radius:16px; }
   .loading-overlay.show { display: flex; }
@@ -287,8 +345,8 @@
   <!-- PAGE 1 — CALENDAR -->
   <div class="page active" id="page-cal">
     <div class="topbar">
-      <i class="ti ti-calendar" style="color:#fff;font-size:20px"></i>
-      <h1>Attendance Tracker</h1>
+      <i class="ti ti-calendar app-icon"></i>
+      <h1>MAA Gayatri Hosiery</h1>
     </div>
     <div class="sync-bar" id="sync-bar-btn" style="cursor:pointer" title="Tap to sync now">
       <div class="sync-dot syncing" id="sync-dot"></div>
@@ -332,6 +390,9 @@
       <div class="stats-header">
         <h3>Monthly Earnings — <span id="stats-month-label"></span></h3>
         <div style="display:flex;gap:6px">
+          <button class="manage-btn" id="go-chart-btn" style="background:#7C3AED">
+            <i class="ti ti-table"></i> Chart
+          </button>
           <button class="manage-btn" id="go-report-btn" style="background:#1D9E75">
             <i class="ti ti-report-analytics"></i> Reports
           </button>
@@ -420,6 +481,37 @@
           </tr>
         </thead>
         <tbody id="report-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGE 6 — MONTHLY CHART TABLE -->
+  <div class="page" id="page-chart">
+    <div class="topbar">
+      <button class="back-btn" id="back-chart-btn">&#8249;</button>
+      <h1>Monthly Chart</h1>
+    </div>
+    <div class="chart-controls">
+      <div class="chart-month-nav">
+        <button id="chart-prev-month">&#8249;</button>
+        <span id="chart-month-label"></span>
+        <button id="chart-next-month">&#8250;</button>
+      </div>
+      <div class="chart-legend-row">
+        <span class="chart-legend-item"><span class="clbadge clbadge-hours"></span> Hours</span>
+        <span class="chart-legend-item"><span class="clbadge clbadge-leave"></span> Leave</span>
+        <span class="chart-legend-item"><span class="clbadge clbadge-absent"></span> Absent</span>
+      </div>
+    </div>
+    <div class="chart-table-wrap">
+      <table class="chart-table" id="chart-table">
+        <thead id="chart-thead"></thead>
+        <tbody id="chart-tbody"></tbody>
+      </table>
+    </div>
+    <div class="chart-totals-wrap">
+      <table class="chart-table" id="chart-totals-table">
+        <tbody id="chart-totals-tbody"></tbody>
       </table>
     </div>
   </div>
