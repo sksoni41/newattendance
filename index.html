@@ -592,22 +592,7 @@ async function loadAllFromSheets() {
   setSyncStatus('syncing', 'Loading...');
 
   try {
-    // First just ping to check connection
-    const pingUrl = SCRIPT_URL + '?action=ping&_ts=' + Date.now();
-    const pingRes = await fetch(pingUrl, { redirect:'follow', cache:'no-store' });
-    const pingText = await pingRes.text();
-    console.log('Ping response:', pingText);
-
-    // Try to parse ping
-    let pingJson;
-    try { pingJson = JSON.parse(pingText.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim()); }
-    catch(e) {
-      throw new Error('Apps Script returned invalid response. Open this URL in browser to check: ' + pingUrl.substring(0, 80));
-    }
-    if (pingJson.error) throw new Error('Apps Script error: ' + pingJson.error);
-
-    // Ping OK — now load data
-    // Try loadInit first, fall back to separate calls
+    // Load employees + current month logs in one batched call
     let employees = [], rows = [];
     try {
       const res = await apiCall({ action:'loadInit', month: mk });
@@ -615,9 +600,11 @@ async function loadAllFromSheets() {
       employees = res.employees || [];
       rows      = res.rows || [];
     } catch(initErr) {
-      console.warn('loadInit failed:', initErr.message, '— trying separate calls');
-      const empRes = await apiCall({ action:'loadEmployees' });
-      const logRes = await apiCall({ action:'loadLogs', month: mk });
+      console.warn('loadInit failed, falling back:', initErr.message);
+      const [empRes, logRes] = await Promise.all([
+        apiCall({ action:'loadEmployees' }),
+        apiCall({ action:'loadLogs', month: mk })
+      ]);
       employees = empRes?.employees || [];
       rows      = logRes?.rows || [];
     }
@@ -629,6 +616,7 @@ async function loadAllFromSheets() {
     LOCAL_CACHE.set(mk, rows);
     mergeLogRows(rows);
     setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
+    document.getElementById('error-banner').style.display = 'none';
 
   } catch(err) {
     console.error('loadAllFromSheets error:', err);
@@ -1228,18 +1216,19 @@ async function showDebugPanel() {
   }
   dbgLog('✓ URL format looks correct', '#a6e3a1');
 
-  // Step 3 — try a ping
-  dbgLog('⏳ Pinging Apps Script...', '#f9e2af');
+  // Step 3 — try a connection test using _ts action
+  dbgLog('⏳ Testing connection to Apps Script...', '#f9e2af');
   try {
-    const pingUrl = SCRIPT_URL + '?_ts=' + Date.now();
-    const res = await fetch(pingUrl, { redirect: 'follow', cache: 'no-store' });
+    const testUrl = SCRIPT_URL + '?action=loadEmployees&_ts=' + Date.now();
+    const res  = await fetch(testUrl, { redirect:'follow', cache:'no-store' });
     dbgLog('✓ Got HTTP ' + res.status + ' response', '#a6e3a1');
     const text = await res.text();
     dbgLog('  Raw response: ' + text.substring(0, 120), '#6c7086');
 
-    // Step 4 — check JSON is parseable
+    // Step 4 — check JSON
+    let parsed;
     try {
-      JSON.parse(text);
+      parsed = JSON.parse(text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim());
       dbgLog('✓ Response is valid JSON', '#a6e3a1');
     } catch(e) {
       dbgLog('❌ Response is NOT valid JSON — Apps Script may have an error', '#f38ba8');
@@ -1247,18 +1236,11 @@ async function showDebugPanel() {
       return;
     }
 
-    // Step 5 — try loadEmployees
-    dbgLog('⏳ Testing loadEmployees...', '#f9e2af');
-    const empUrl = SCRIPT_URL + '?action=loadEmployees&_ts=' + Date.now();
-    const empRes = await fetch(empUrl, { redirect: 'follow', cache: 'no-store' });
-    const empText = await empRes.text();
-    dbgLog('  loadEmployees response: ' + empText.substring(0, 120), '#6c7086');
-    const empJson = JSON.parse(empText);
-    if (empJson.error) {
-      dbgLog('❌ Apps Script returned error: ' + empJson.error, '#f38ba8');
+    if (parsed.error) {
+      dbgLog('❌ Apps Script returned error: ' + parsed.error, '#f38ba8');
       dbgLog('  Tip: Check your SHEET_ID in Apps Script', '#fab387');
-    } else {
-      dbgLog('✓ loadEmployees works! Found ' + (empJson.employees||[]).length + ' employees', '#a6e3a1');
+    } else if (parsed.employees !== undefined) {
+      dbgLog('✓ loadEmployees works! Found ' + (parsed.employees||[]).length + ' employees', '#a6e3a1');
       dbgLog('🎉 Everything looks good — try tapping Retry above', '#a6e3a1');
     }
 
