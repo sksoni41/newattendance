@@ -457,9 +457,14 @@ let EMPLOYEES = [
   { name: 'Deepak Verma', rate: 190 }
 ];
 
+// ── CONSTANTS — declared first so every function can use them ──
+const MONTHS     = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYS       = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
 // logs shape: { "YYYY-MM-DD": { "Emp Name": { hours: "8", leave: "" } } }
 // leave: "" = present/absent, "leave" = on leave
-let state = { month: new Date().getMonth(), year: new Date().getFullYear(), logs: {} };
+let state         = { month: new Date().getMonth(), year: new Date().getFullYear(), logs: {} };
 let selectedDate  = null;
 let reportState   = { empIndex: 0, month: new Date().getMonth(), year: new Date().getFullYear() };
 
@@ -574,27 +579,67 @@ async function loadAllFromSheets() {
   }
   document.getElementById('error-banner').style.display = 'none';
 
-  // Step 1 — show cached data INSTANTLY (zero wait)
+  // Step 1 — show any cached data instantly
   const cachedEmps = LOCAL_CACHE.get(EMP_CACHE_KEY);
   const mk         = monthKey(state.year, state.month);
   const cachedLogs = LOCAL_CACHE.get(mk);
-
   if (cachedEmps) EMPLOYEES = cachedEmps;
-  if (cachedLogs) { mergeLogRows(cachedLogs); renderCalendar(); }
+  if (cachedLogs) { mergeLogRows(cachedLogs); }
+  renderCalendar();
 
-  if (cachedEmps && cachedLogs) {
-    // Data shown instantly — now refresh silently in background
-    setSyncStatus('syncing', 'Checking for updates...');
-    showLoading(false);
-    _refreshInBackground(mk);
-    return;
+  // Step 2 — always fetch fresh from sheet
+  showLoading(true, 'Syncing with Google Sheets...');
+  setSyncStatus('syncing', 'Loading...');
+
+  try {
+    // First just ping to check connection
+    const pingUrl = SCRIPT_URL + '?action=ping&_ts=' + Date.now();
+    const pingRes = await fetch(pingUrl, { redirect:'follow', cache:'no-store' });
+    const pingText = await pingRes.text();
+    console.log('Ping response:', pingText);
+
+    // Try to parse ping
+    let pingJson;
+    try { pingJson = JSON.parse(pingText.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim()); }
+    catch(e) {
+      throw new Error('Apps Script returned invalid response. Open this URL in browser to check: ' + pingUrl.substring(0, 80));
+    }
+    if (pingJson.error) throw new Error('Apps Script error: ' + pingJson.error);
+
+    // Ping OK — now load data
+    // Try loadInit first, fall back to separate calls
+    let employees = [], rows = [];
+    try {
+      const res = await apiCall({ action:'loadInit', month: mk });
+      if (res.error) throw new Error(res.error);
+      employees = res.employees || [];
+      rows      = res.rows || [];
+    } catch(initErr) {
+      console.warn('loadInit failed:', initErr.message, '— trying separate calls');
+      const empRes = await apiCall({ action:'loadEmployees' });
+      const logRes = await apiCall({ action:'loadLogs', month: mk });
+      employees = empRes?.employees || [];
+      rows      = logRes?.rows || [];
+    }
+
+    if (employees.length > 0) {
+      EMPLOYEES = employees.map(e => ({ name:String(e.name||'').trim(), rate:parseFloat(e.rate)||0 }));
+      LOCAL_CACHE.set(EMP_CACHE_KEY, EMPLOYEES);
+    }
+    LOCAL_CACHE.set(mk, rows);
+    mergeLogRows(rows);
+    setSyncStatus('ok', 'Synced ✓  ' + new Date().toLocaleTimeString());
+
+  } catch(err) {
+    console.error('loadAllFromSheets error:', err);
+    const msg = err.message || 'Unknown error';
+    setSyncStatus('error', 'Failed');
+    document.getElementById('error-detail').textContent = '⚠ ' + msg;
+    document.getElementById('error-banner').style.display = 'block';
   }
 
-  // No cache — show loader and fetch
-  showLoading(true, `Loading ${MONTHS[state.month]} ${state.year}...`);
-  setSyncStatus('syncing', 'Loading...');
-  await _fetchFresh(mk);
-  // loader is hidden inside _fetchFresh's finally block
+  showLoading(false);
+  renderCalendar();
 }
 
 // Single batched call — falls back to two separate calls if loadInit fails
