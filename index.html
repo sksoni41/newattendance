@@ -486,6 +486,151 @@
     .chart-table thead tr th { font-size: 12px; padding: 10px 14px; }
     .chart-table tbody td.chart-cell { font-size: 13px; padding: 8px 12px; min-width: 80px; }
   }
+
+  /* ══════════════════════════════════════
+     ADVANCE / BORROW FEATURE
+  ══════════════════════════════════════ */
+
+  /* Employee selector list — reused from report-list style */
+  .adv-select-list { padding: 10px 12px 16px; }
+  .adv-select-card {
+    display: flex; align-items: center; gap: 12px;
+    background: #f8f9fa; border: 1px solid #e8e8e8;
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .adv-select-card:hover { background: #fef3e2; border-color: #f5c97a; }
+  .adv-select-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #FEF3C7; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700;
+    color: #B45309; flex-shrink: 0;
+  }
+  .adv-select-info { flex: 1; }
+  .adv-select-name  { font-size: 14px; font-weight: 500; color: #1a1a1a; }
+  .adv-select-meta  { font-size: 11px; color: #888; margin-top: 2px; }
+  .adv-select-arrow { font-size: 18px; color: #ccc; }
+  .adv-balance-pill {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 8px; border-radius: 20px;
+    background: #FEF3C7; color: #B45309;
+  }
+  .adv-balance-pill.zero { background: #f0f0f0; color: #aaa; }
+
+  /* Detail page sub-header */
+  .adv-topbar-sub {
+    padding: 10px 16px;
+    background: #fffbeb;
+    border-bottom: 1px solid #fde68a;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .adv-emp-name { font-size: 14px; font-weight: 600; color: #B45309; }
+  .adv-month-nav { display: flex; align-items: center; gap: 8px; }
+  .adv-month-nav button {
+    background: none; border: 1px solid #ccc; border-radius: 6px;
+    width: 26px; height: 26px; cursor: pointer; font-size: 15px; color: #333;
+  }
+  .adv-month-nav span {
+    font-size: 12px; color: #555; font-weight: 500; min-width: 80px; text-align: center;
+  }
+
+  /* Summary cards */
+  .adv-summary {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 6px; margin: 12px 12px 8px;
+  }
+  .adv-summary-card {
+    background: #f8f9fa; border: 1px solid #e8e8e8;
+    border-radius: 10px; padding: 8px 4px; text-align: center;
+  }
+  .adv-summary-val { font-size: 15px; font-weight: 700; color: #B45309; }
+  .adv-summary-val.green { color: #1D9E75; }
+  .adv-summary-val.red   { color: #E24B4A; }
+  .adv-summary-lbl { font-size: 9px; color: #888; margin-top: 2px; }
+
+  /* Add advance form */
+  .adv-add-section { margin: 0 12px 14px; }
+  .adv-add-toggle {
+    width: 100%; padding: 10px;
+    background: #fffbeb; color: #B45309;
+    border: 1px dashed #F59E0B; border-radius: 10px;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .adv-add-form {
+    background: #f8f9fa; border-radius: 12px;
+    border: 1px solid #e8e8e8; padding: 14px;
+    margin-top: 8px; display: none;
+  }
+  .adv-add-form.open { display: block; }
+  .adv-add-form label { font-size: 11px; color: #888; display: block; margin-bottom: 3px; margin-top: 8px; }
+  .adv-add-form label:first-child { margin-top: 0; }
+  .adv-add-form input, .adv-add-form textarea {
+    width: 100%; padding: 8px 10px; font-size: 13px;
+    border: 1px solid #ccc; border-radius: 8px; background: #fff; color: #333;
+    font-family: inherit;
+  }
+  .adv-add-form textarea { resize: vertical; min-height: 56px; }
+  .adv-add-row { display: flex; gap: 8px; }
+  .adv-add-row > div { flex: 1; }
+  .btn-adv-confirm {
+    width: 100%; margin-top: 10px; padding: 9px;
+    background: #B45309; color: #fff; border: none;
+    border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+  .btn-adv-confirm:active { opacity: 0.85; }
+
+  /* Advance entries list */
+  .adv-entries-wrap { margin: 0 12px 16px; }
+  .adv-entry {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px; background: #fff;
+    border: 1px solid #e8e8e8; border-radius: 10px;
+    margin-bottom: 6px; position: relative;
+  }
+  .adv-entry-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #FEF3C7; display: flex; align-items: center;
+    justify-content: center; font-size: 15px; flex-shrink: 0; margin-top: 1px;
+  }
+  .adv-entry-info { flex: 1; }
+  .adv-entry-note { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+  .adv-entry-date { font-size: 11px; color: #888; margin-top: 2px; }
+  .adv-entry-amount { font-size: 14px; font-weight: 700; color: #B45309; white-space: nowrap; }
+  .adv-entry-deducted { color: #1D9E75; }
+  .adv-del-btn {
+    background: #FCEBEB; border: none; border-radius: 6px;
+    color: #A32D2D; width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 12px; flex-shrink: 0;
+  }
+  .adv-empty {
+    text-align: center; padding: 32px 16px;
+    color: #aaa; font-size: 13px;
+  }
+  .adv-empty i { font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.4; }
+
+  /* Net salary banner */
+  .adv-net-banner {
+    margin: 0 12px 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #1D9E75 0%, #16866200 100%);
+    background: #eaf3de;
+    border: 1px solid #b5d98a;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .adv-net-label { font-size: 12px; color: #3B6D11; font-weight: 500; }
+  .adv-net-value { font-size: 18px; font-weight: 700; color: #1D9E75; }
+
+  @media (min-width: 600px) {
+    .adv-summary { gap: 12px; margin: 14px 28px 10px; }
+    .adv-add-section { margin: 0 28px 16px; }
+    .adv-entries-wrap { margin: 0 28px 20px; }
+    .adv-net-banner { margin: 0 28px 12px; }
+    .adv-topbar-sub { padding: 12px 28px; }
+    .adv-select-list { padding: 14px 28px 20px; }
+  }
 </style>
 </head>
 <body>
@@ -541,6 +686,9 @@
         <div style="display:flex;gap:6px">
           <button class="manage-btn" id="go-chart-btn" style="background:#7C3AED">
             <i class="ti ti-table"></i> Chart
+          </button>
+          <button class="manage-btn" id="go-advance-list-btn" style="background:#B45309">
+            <i class="ti ti-cash"></i> Advance
           </button>
           <button class="manage-btn" id="go-report-btn" style="background:#1D9E75">
             <i class="ti ti-report-analytics"></i> Reports
@@ -659,6 +807,56 @@
         <tfoot id="chart-totals-tbody"></tfoot>
       </table>
     </div>
+  </div>
+
+  <!-- PAGE 7 — ADVANCE LIST (select employee) -->
+  <div class="page" id="page-advance-list">
+    <div class="topbar">
+      <button class="back-btn" id="back-advance-list-btn">&#8249;</button>
+      <h1>Employee Advances</h1>
+    </div>
+    <div class="adv-select-list" id="adv-select-list"></div>
+  </div>
+
+  <!-- PAGE 8 — ADVANCE DETAIL (per employee) -->
+  <div class="page" id="page-advance">
+    <div class="topbar">
+      <button class="back-btn" id="back-advance-btn">&#8249;</button>
+      <h1>Advance Ledger</h1>
+    </div>
+    <div class="adv-topbar-sub">
+      <span class="adv-emp-name" id="adv-emp-name"></span>
+      <div class="adv-month-nav">
+        <button id="adv-prev-month">&#8249;</button>
+        <span id="adv-month-label"></span>
+        <button id="adv-next-month">&#8250;</button>
+      </div>
+    </div>
+    <div class="adv-summary" id="adv-summary"></div>
+    <div class="adv-net-banner" id="adv-net-banner"></div>
+    <div class="adv-add-section">
+      <button class="adv-add-toggle" id="adv-add-toggle">
+        <i class="ti ti-plus"></i> Record New Advance
+      </button>
+      <div class="adv-add-form" id="adv-add-form">
+        <div class="adv-add-row">
+          <div>
+            <label>Date</label>
+            <input type="date" id="adv-date-input">
+          </div>
+          <div>
+            <label>Amount (₹)</label>
+            <input type="number" id="adv-amount-input" placeholder="e.g. 500" min="1">
+          </div>
+        </div>
+        <label>Note / Reason</label>
+        <textarea id="adv-note-input" placeholder="e.g. Medical emergency, personal need…"></textarea>
+        <button class="btn-adv-confirm" id="btn-adv-confirm">
+          <i class="ti ti-check"></i> Save Advance
+        </button>
+      </div>
+    </div>
+    <div class="adv-entries-wrap" id="adv-entries-wrap"></div>
   </div>
 
   <!-- LOADING OVERLAY -->
@@ -1688,6 +1886,257 @@ async function silentSync() {
 }
 
 // ═══════════════════════════════════════════════
+// ADVANCE / BORROW LEDGER
+// ═══════════════════════════════════════════════
+// advanceState: { empIndex, month, year }
+let advanceState = { empIndex: 0, month: new Date().getMonth(), year: new Date().getFullYear() };
+
+// In-memory store: { "EmpName": [ { id, date, amount, note } ] }
+// Loaded from Sheets on demand, cached in localStorage
+let ADVANCES = {};  // keyed by employee name → array of advance records
+
+const ADV_CACHE_KEY = 'advances';
+
+function advCacheKey(empName) { return 'adv_' + empName.replace(/\s+/g, '_'); }
+
+// ── Load advances from Sheets ──
+async function loadAdvances(empName) {
+  const cacheKey = advCacheKey(empName);
+  const cached   = LOCAL_CACHE.get(cacheKey);
+  if (cached) { ADVANCES[empName] = cached; }
+
+  if (!SCRIPT_URL) return;
+  try {
+    const res = await apiCall({ action: 'loadAdvances', employee: empName });
+    const rows = res?.advances || [];
+    ADVANCES[empName] = rows.map(r => ({
+      id:     String(r[0] || Date.now()),
+      date:   String(r[1] || ''),
+      amount: parseFloat(r[2]) || 0,
+      note:   String(r[3] || '')
+    }));
+    LOCAL_CACHE.set(cacheKey, ADVANCES[empName]);
+  } catch(e) {
+    console.warn('loadAdvances error:', e.message);
+  }
+}
+
+// ── Save a new advance to Sheets ──
+async function saveAdvance(empName, record) {
+  if (!ADVANCES[empName]) ADVANCES[empName] = [];
+  ADVANCES[empName].push(record);
+  LOCAL_CACHE.set(advCacheKey(empName), ADVANCES[empName]);
+
+  if (!SCRIPT_URL) return true;
+  try {
+    await apiCall({
+      action:   'saveAdvance',
+      employee: empName,
+      data:     JSON.stringify(ADVANCES[empName].map(r => [r.id, r.date, r.amount, r.note]))
+    });
+    return true;
+  } catch(e) {
+    console.warn('saveAdvance error:', e.message);
+    return false;
+  }
+}
+
+// ── Delete an advance entry ──
+async function deleteAdvance(empName, id) {
+  if (!ADVANCES[empName]) return;
+  ADVANCES[empName] = ADVANCES[empName].filter(r => r.id !== id);
+  LOCAL_CACHE.set(advCacheKey(empName), ADVANCES[empName]);
+
+  if (!SCRIPT_URL) return;
+  try {
+    await apiCall({
+      action:   'saveAdvance',
+      employee: empName,
+      data:     JSON.stringify(ADVANCES[empName].map(r => [r.id, r.date, r.amount, r.note]))
+    });
+  } catch(e) { console.warn('deleteAdvance error:', e.message); }
+}
+
+// ── Open advance employee selector ──
+function openAdvanceList() {
+  const container = document.getElementById('adv-select-list');
+  container.innerHTML = '';
+  EMPLOYEES.forEach((emp, idx) => {
+    const ini      = initials(emp.name);
+    const records  = ADVANCES[emp.name] || [];
+    const mk       = `${advanceState.year}-${String(advanceState.month+1).padStart(2,'0')}`;
+    const monthAdv = records
+      .filter(r => r.date && r.date.startsWith(mk))
+      .reduce((s, r) => s + r.amount, 0);
+    const totalAdv = records.reduce((s, r) => s + r.amount, 0);
+
+    const card = document.createElement('div');
+    card.className = 'adv-select-card';
+    card.innerHTML = `
+      <div class="adv-select-avatar">${ini}</div>
+      <div class="adv-select-info">
+        <div class="adv-select-name">${emp.name}</div>
+        <div class="adv-select-meta">
+          This month: ₹${monthAdv.toLocaleString('en-IN')} · Total pending: ₹${totalAdv.toLocaleString('en-IN')}
+        </div>
+      </div>
+      <span class="adv-balance-pill ${totalAdv === 0 ? 'zero' : ''}">₹${totalAdv.toLocaleString('en-IN')}</span>
+      <span class="adv-select-arrow">›</span>`;
+    card.addEventListener('click', () => openAdvanceDetail(idx));
+    container.appendChild(card);
+  });
+  showPage('page-advance-list');
+}
+
+// ── Open detail for one employee ──
+async function openAdvanceDetail(empIdx) {
+  advanceState.empIndex = empIdx;
+  advanceState.month    = state.month;
+  advanceState.year     = state.year;
+  const emp = EMPLOYEES[empIdx];
+  showLoading(true, 'Loading advances...');
+  await loadAdvances(emp.name);
+  showLoading(false);
+  renderAdvanceDetail();
+  showPage('page-advance');
+}
+
+// ── Render the detail page ──
+function renderAdvanceDetail() {
+  const emp       = EMPLOYEES[advanceState.empIndex];
+  const { month, year } = advanceState;
+  const mk        = `${year}-${String(month+1).padStart(2,'0')}`;
+
+  document.getElementById('adv-emp-name').textContent    = emp.name;
+  document.getElementById('adv-month-label').textContent = `${MONTHS[month].slice(0,3)} ${year}`;
+
+  // Set date input default to today or first of month
+  const today = new Date();
+  const defDate = (today.getMonth() === month && today.getFullYear() === year)
+    ? today.toISOString().slice(0,10)
+    : `${year}-${String(month+1).padStart(2,'0')}-01`;
+  document.getElementById('adv-date-input').value = defDate;
+
+  const allRecords   = ADVANCES[emp.name] || [];
+  const monthRecords = allRecords.filter(r => r.date && r.date.startsWith(mk));
+  const totalAdv     = monthRecords.reduce((s, r) => s + r.amount, 0);
+  const allTimeAdv   = allRecords.reduce((s, r) => s + r.amount, 0);
+
+  // Gross salary for this month
+  const { totalHours } = getEmpMonthStats(emp, month, year);
+  const grossSalary = Math.round(totalHours * emp.rate);
+  const netSalary   = grossSalary - totalAdv;
+
+  // Summary cards
+  document.getElementById('adv-summary').innerHTML = `
+    <div class="adv-summary-card">
+      <div class="adv-summary-val">₹${grossSalary.toLocaleString('en-IN')}</div>
+      <div class="adv-summary-lbl">Gross Salary</div>
+    </div>
+    <div class="adv-summary-card">
+      <div class="adv-summary-val red">₹${totalAdv.toLocaleString('en-IN')}</div>
+      <div class="adv-summary-lbl">Advances</div>
+    </div>
+    <div class="adv-summary-card">
+      <div class="adv-summary-val ${netSalary >= 0 ? 'green' : 'red'}">₹${Math.abs(netSalary).toLocaleString('en-IN')}</div>
+      <div class="adv-summary-lbl">Net Payable</div>
+    </div>`;
+
+  // Net salary banner
+  document.getElementById('adv-net-banner').innerHTML = `
+    <div>
+      <div class="adv-net-label">Net Salary to Pay this Month</div>
+      <div style="font-size:11px;color:#555;margin-top:2px">Gross ₹${grossSalary.toLocaleString('en-IN')} − Advance ₹${totalAdv.toLocaleString('en-IN')}</div>
+    </div>
+    <div class="adv-net-value" style="color:${netSalary >= 0 ? '#1D9E75' : '#E24B4A'}">₹${netSalary.toLocaleString('en-IN')}</div>`;
+
+  // Entries list
+  const wrap = document.getElementById('adv-entries-wrap');
+  wrap.innerHTML = '';
+
+  if (monthRecords.length === 0) {
+    wrap.innerHTML = `<div class="adv-empty"><i class="ti ti-cash-off"></i>No advances recorded for ${MONTHS[month]} ${year}</div>`;
+    return;
+  }
+
+  // Sort newest first
+  const sorted = [...monthRecords].sort((a, b) => b.date.localeCompare(a.date));
+  sorted.forEach(rec => {
+    const dt  = new Date(rec.date + 'T00:00:00');
+    const dStr = isNaN(dt) ? rec.date : dt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    const div  = document.createElement('div');
+    div.className = 'adv-entry';
+    div.innerHTML = `
+      <div class="adv-entry-icon">💵</div>
+      <div class="adv-entry-info">
+        <div class="adv-entry-note">${rec.note || 'Advance'}</div>
+        <div class="adv-entry-date">${dStr}</div>
+      </div>
+      <div class="adv-entry-amount">₹${rec.amount.toLocaleString('en-IN')}</div>
+      <button class="adv-del-btn" title="Delete" onclick="confirmDeleteAdvance('${emp.name}','${rec.id}')">
+        <i class="ti ti-trash"></i>
+      </button>`;
+    wrap.appendChild(div);
+  });
+}
+
+// ── Delete confirmation ──
+async function confirmDeleteAdvance(empName, id) {
+  if (!confirm('Remove this advance entry?')) return;
+  showLoading(true, 'Deleting...');
+  await deleteAdvance(empName, id);
+  showLoading(false);
+  renderAdvanceDetail();
+  openAdvanceList(); // refresh list counts
+  showPage('page-advance');
+}
+
+// ── Save new advance from form ──
+document.getElementById('btn-adv-confirm').addEventListener('click', async () => {
+  const emp    = EMPLOYEES[advanceState.empIndex];
+  const date   = document.getElementById('adv-date-input').value.trim();
+  const amount = parseFloat(document.getElementById('adv-amount-input').value);
+  const note   = document.getElementById('adv-note-input').value.trim();
+
+  if (!date)             { alert('Please select a date.'); return; }
+  if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
+
+  const record = { id: String(Date.now()), date, amount, note: note || 'Advance' };
+
+  showLoading(true, 'Saving...');
+  const ok = await saveAdvance(emp.name, record);
+  showLoading(false);
+
+  if (ok) {
+    document.getElementById('adv-add-form').classList.remove('open');
+    document.getElementById('adv-amount-input').value = '';
+    document.getElementById('adv-note-input').value   = '';
+  }
+  renderAdvanceDetail();
+  openAdvanceList();
+  showPage('page-advance');
+});
+
+// ── Toggle add form ──
+document.getElementById('adv-add-toggle').addEventListener('click', () => {
+  document.getElementById('adv-add-form').classList.toggle('open');
+});
+
+// ── Month navigation ──
+document.getElementById('adv-prev-month').addEventListener('click', async () => {
+  advanceState.month--;
+  if (advanceState.month < 0) { advanceState.month = 11; advanceState.year--; }
+  await loadAdvances(EMPLOYEES[advanceState.empIndex].name);
+  renderAdvanceDetail();
+});
+document.getElementById('adv-next-month').addEventListener('click', async () => {
+  advanceState.month++;
+  if (advanceState.month > 11) { advanceState.month = 0; advanceState.year++; }
+  await loadAdvances(EMPLOYEES[advanceState.empIndex].name);
+  renderAdvanceDetail();
+});
+
+// ═══════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════
 document.getElementById('go-manage-btn').addEventListener('click', () => { renderManagePage(); showPage('page-manage'); });
@@ -1698,6 +2147,9 @@ document.getElementById('back-report-list-btn').addEventListener('click', () => 
 document.getElementById('back-report-btn').addEventListener('click', () => showPage('page-report-list'));
 document.getElementById('go-chart-btn').addEventListener('click', openChart);
 document.getElementById('back-chart-btn').addEventListener('click', () => showPage('page-cal'));
+document.getElementById('go-advance-list-btn').addEventListener('click', () => { advanceState.month = state.month; advanceState.year = state.year; openAdvanceList(); });
+document.getElementById('back-advance-list-btn').addEventListener('click', () => showPage('page-cal'));
+document.getElementById('back-advance-btn').addEventListener('click', () => openAdvanceList());
 
 document.getElementById('save-btn').addEventListener('click', async () => {
   const ok = await saveAllToSheets();
