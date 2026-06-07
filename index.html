@@ -1946,39 +1946,40 @@ async function loadAdvances(empName) {
   if (!empName) return;
   const cacheKey = advCacheKey(empName);
 
-  // Always fetch fresh from sheet — don't rely on cache for advances
-  // because entries added from other devices must always show up
   if (!SCRIPT_URL) {
-    // Offline — use cache only
     const cached = LOCAL_CACHE.get(cacheKey);
     if (cached) ADVANCES[empName] = cached;
     return;
   }
 
   try {
-    // Build URL manually to debug easily
     const url = SCRIPT_URL + '?action=loadAdvances&employee='
       + encodeURIComponent(empName) + '&_ts=' + Date.now();
 
-    console.log('loadAdvances →', empName, url.substring(0, 100));
-
+    console.log('loadAdvances →', empName);
     const res  = await fetch(url, { redirect:'follow', cache:'no-store' });
     const text = await res.text();
     console.log('loadAdvances ←', empName, text.substring(0, 200));
 
-    const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
-    const json  = JSON.parse(clean);
+    // Use response.json() via re-fetch or parse carefully
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch(e) {
+      // Strip JSONP wrapper if present
+      const clean = text.replace(/^[^(]+\(/, '').replace(/\)\s*;?\s*$/, '').trim();
+      json = JSON.parse(clean);
+    }
 
     if (json.error) {
-      console.error('loadAdvances error from sheet:', json.error);
+      console.error('loadAdvances sheet error:', json.error);
       return;
     }
 
     const rows = json.advances || [];
-    // Sheet returns [id, date, amount, note] after stripping Employee col
     ADVANCES[empName] = rows.map(r => ({
       id:     String(r[0] || Date.now()),
-      date:   String(r[1] || ''),
+      date:   normaliseDateStr(r[1]),   // ← fix malformed date strings
       amount: parseFloat(r[2]) || 0,
       note:   String(r[3] || '')
     }));
@@ -1987,11 +1988,29 @@ async function loadAdvances(empName) {
     LOCAL_CACHE.set(cacheKey, ADVANCES[empName]);
 
   } catch(e) {
-    console.error('loadAdvances fetch error for', empName, ':', e.message);
-    // Fall back to cache if fetch fails
+    console.error('loadAdvances error for', empName, ':', e.message);
     const cached = LOCAL_CACHE.get(cacheKey);
     if (cached) ADVANCES[empName] = cached;
   }
+}
+
+// Converts any date format to YYYY-MM-DD for consistent filtering
+function normaliseDateStr(val) {
+  if (!val) return '';
+  const s = String(val).trim();
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+  // Try parsing any other format (e.g. "Sun Jun 07 2026 00:00:00 GMT+0530...")
+  try {
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const y  = d.getFullYear();
+      const m  = String(d.getMonth() + 1).padStart(2, '0');
+      const dy = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${dy}`;
+    }
+  } catch(e) {}
+  return s;
 }
 
 // ── Save advances to Sheets (POST — handles large data) ──
